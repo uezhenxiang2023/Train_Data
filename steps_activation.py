@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import re
+import sys
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Iterable
@@ -12,7 +13,7 @@ from openpyxl.utils import get_column_letter
 from PIL import Image
 
 
-ROOT = Path(__file__).resolve().parent
+DEFAULT_ROOT = Path(__file__).resolve().parent
 SHOT_DIR = "01_shots"
 ASSET_DIR = "02_assets"
 
@@ -274,7 +275,7 @@ def collect_asset_files(group_dir: Path) -> list[AssetFile]:
     return asset_files
 
 
-def build_sheet1_rows(group_dir: Path, shot_files: Iterable[ShotFile]) -> list[dict]:
+def build_sheet1_rows(group_dir: Path, shot_files: Iterable[ShotFile], root: Path) -> list[dict]:
     rows = []
     for shot_file in shot_files:
         resolution, duration = video_metadata(shot_file.path)
@@ -288,13 +289,13 @@ def build_sheet1_rows(group_dir: Path, shot_files: Iterable[ShotFile]) -> list[d
                 "is_final": "是" if shot_file.is_final else "否",
                 "is_log": "否" if shot_file.is_final else "",
                 "graded_file_id": "",
-                "file_path": relative_path(shot_file.path, ROOT),
+                "file_path": relative_path(shot_file.path, root),
             }
         )
     return rows
 
 
-def build_sheet2_rows(group_dir: Path, asset_files: Iterable[AssetFile]) -> list[dict]:
+def build_sheet2_rows(group_dir: Path, asset_files: Iterable[AssetFile], root: Path) -> list[dict]:
     rows = []
     for asset_file in asset_files:
         rows.append(
@@ -305,7 +306,7 @@ def build_sheet2_rows(group_dir: Path, asset_files: Iterable[AssetFile]) -> list
                 "asset_format": asset_format(asset_file.path),
                 "view_angle": "成片机位",
                 "style": "",
-                "file_path": relative_path(asset_file.path, ROOT),
+                "file_path": relative_path(asset_file.path, root),
             }
         )
     return rows
@@ -385,7 +386,7 @@ def write_rows(ws, headers: list[str], rows: list[dict]) -> None:
     ws.auto_filter.ref = ws.dimensions
 
 
-def generate_group_excel(group_dir: Path) -> Path:
+def generate_group_excel(group_dir: Path, root: Path) -> Path:
     shot_id = group_dir.name
     shot_files = collect_shot_files(group_dir, shot_id)
     asset_files = collect_asset_files(group_dir)
@@ -410,7 +411,7 @@ def generate_group_excel(group_dir: Path) -> Path:
             "graded_file_id",
             "file_path",
         ],
-        build_sheet1_rows(group_dir, shot_files),
+        build_sheet1_rows(group_dir, shot_files, root),
     )
 
     sheet2 = workbook.create_sheet("Sheet2_素材文件清单")
@@ -425,7 +426,7 @@ def generate_group_excel(group_dir: Path) -> Path:
             "style",
             "file_path",
         ],
-        build_sheet2_rows(group_dir, asset_files),
+        build_sheet2_rows(group_dir, asset_files, root),
     )
 
     sheet3 = workbook.create_sheet("Sheet3_编辑关系与修改说明")
@@ -460,15 +461,34 @@ def iter_group_dirs(root: Path) -> Iterable[Path]:
             yield path
 
 
-def main() -> None:
+def resolve_root(argv: list[str]) -> Path:
+    if len(argv) > 1:
+        return Path(argv[1]).expanduser().resolve()
+    return DEFAULT_ROOT
+
+
+def main(argv: list[str] | None = None) -> None:
+    argv = argv or sys.argv
+    root = resolve_root(argv)
+    if not root.is_dir():
+        raise SystemExit(f"数据根目录不存在: {root}")
+
     output_paths = []
-    for group_dir in iter_group_dirs(ROOT):
+    skipped_empty_groups = []
+    for group_dir in iter_group_dirs(root):
+        if not list_process_paths(group_dir):
+            print(f"跳过空数据组: {group_dir}")
+            skipped_empty_groups.append(group_dir)
+            continue
         rename_plans = normalize_group_filenames(group_dir)
         for plan in rename_plans:
             print(f"已重命名: {plan.source.name} -> {plan.target.name}")
-        output_paths.append(generate_group_excel(group_dir))
+        output_paths.append(generate_group_excel(group_dir, root))
 
     if not output_paths:
+        if skipped_empty_groups:
+            print("没有非空数据组，未生成 Excel。")
+            return
         raise SystemExit("未找到包含 01_shots 和 02_assets 的数据组目录。")
 
     for output_path in output_paths:
