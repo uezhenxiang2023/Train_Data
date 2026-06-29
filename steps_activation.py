@@ -64,6 +64,19 @@ STAGE_ORDER = {
     "lfx": 950,
 }
 
+ASSET_STYLE_NAMES = {
+    "efx": {
+        "fog": "雾效",
+        "rain": "雨效",
+        "fire": "火效",
+    },
+    "lgt": {
+        "character": "角色",
+        "prop": "道具",
+        "set": "陈设",
+    },
+}
+
 
 @dataclass(frozen=True)
 class ShotFile:
@@ -111,6 +124,27 @@ def parse_stage_and_version(path: Path, shot_id: str) -> tuple[str, str]:
         stage_code = stage_parts[0] if stage_parts else ""
 
     return stage_code.lower(), version.lower()
+
+
+def parse_asset_stage_and_style(path: Path) -> tuple[str, str]:
+    stem = strip_id_prefix(path.stem)
+    parts = [part.lower() for part in stem.split("_")]
+
+    for index, part in enumerate(parts):
+        if part not in STAGE_NAMES:
+            continue
+
+        style_names = ASSET_STYLE_NAMES.get(part, {})
+        style = ""
+        for descriptor in parts[index + 1 :]:
+            if re.fullmatch(r"v\d+", descriptor, re.I):
+                break
+            if descriptor in style_names:
+                style = style_names[descriptor]
+                break
+        return part, style
+
+    return "", ""
 
 
 def version_number(version: str) -> int:
@@ -298,14 +332,15 @@ def build_sheet1_rows(group_dir: Path, shot_files: Iterable[ShotFile], root: Pat
 def build_sheet2_rows(group_dir: Path, asset_files: Iterable[AssetFile], root: Path) -> list[dict]:
     rows = []
     for asset_file in asset_files:
+        stage_code, style = parse_asset_stage_and_style(asset_file.path)
         rows.append(
             {
                 "asset_id": asset_file.asset_id,
                 "asset_name": asset_file.path.name,
-                "asset_type": "",
+                "asset_type": STAGE_NAMES.get(stage_code, ""),
                 "asset_format": asset_format(asset_file.path),
                 "view_angle": "成片机位",
-                "style": "",
+                "style": style,
                 "file_path": relative_path(asset_file.path, root),
             }
         )
