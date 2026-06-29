@@ -1,4 +1,7 @@
 /.venv
+__pycache__/
+*.py[cod]
 *.mov
 *.mp4
+*.xlsx
 /影视视效后期工作室-交付标准说明 副本.pdf
