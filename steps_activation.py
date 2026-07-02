@@ -29,7 +29,7 @@ STAGE_NAMES = {
     "原始素材": "原始素材",
     "mod": "Model（模型）",
     "previs": "Previsualization（预演）",
-    "mp": "Matte Painting（数字绘景）",
+    "dmt": "Matte Painting（数字绘景）",
     "mg": "Motion Graphics（动态图形）",
     "mm": "Matchmove（跟踪）",
     "ani": "Animation（动画）",
@@ -49,7 +49,7 @@ STAGE_ORDER = {
     "原始素材": 0,
     "mod": 10,
     "previs": 20,
-    "mp": 30,
+    "dmt": 30,
     "mg": 40,
     "mm": 50,
     "ani": 60,
@@ -69,11 +69,19 @@ ASSET_STYLE_NAMES = {
         "fog": "雾效",
         "rain": "雨效",
         "fire": "火效",
+        "dust": "尘效"
     },
     "lgt": {
         "character": "角色",
         "prop": "道具",
         "set": "陈设",
+    },
+    "dmt": {
+        "env": "自然环境",
+        "building": "人文建筑",
+        "street": "街区",
+        "sky": "天空",
+        "decal": "纹理",
     },
 }
 
@@ -124,6 +132,32 @@ def parse_stage_and_version(path: Path, shot_id: str) -> tuple[str, str]:
         stage_code = stage_parts[0] if stage_parts else ""
 
     return stage_code.lower(), version.lower()
+
+
+def stage_descriptors(path: Path, shot_id: str, stage_code: str) -> list[str]:
+    stem = path.stem
+    stem = re.sub(r"^[FA]\d{3}_", "", stem, flags=re.I)
+    remainder = stem
+    if stem.lower().startswith(shot_id.lower()):
+        remainder = stem[len(shot_id) :].lstrip("_")
+
+    parts = [part.lower() for part in remainder.split("_")]
+    stage_code = stage_code.lower()
+    for index, part in enumerate(parts):
+        if part != stage_code:
+            continue
+        descriptors = []
+        for descriptor in parts[index + 1 :]:
+            if re.fullmatch(r"v\d+", descriptor, re.I):
+                break
+            descriptors.append(descriptor)
+        return descriptors
+
+    return []
+
+
+def is_reposition_cmp(path: Path, shot_id: str, stage_code: str) -> bool:
+    return stage_code == "cmp" and "reposition" in stage_descriptors(path, shot_id, stage_code)
 
 
 def parse_asset_stage_and_style(path: Path) -> tuple[str, str]:
@@ -281,13 +315,21 @@ def collect_shot_files(group_dir: Path, shot_id: str) -> list[ShotFile]:
     shot_paths = list_process_paths(group_dir)
     parsed = [(path, *parse_stage_and_version(path, shot_id)) for path in shot_paths]
     parsed = sorted(parsed, key=stage_sort_key)
-    cmp_versions = [version_number(version) for _, stage, version in parsed if stage == "cmp"]
+    cmp_versions = [
+        version_number(version)
+        for path, stage, version in parsed
+        if stage == "cmp" and not is_reposition_cmp(path, shot_id, stage)
+    ]
     final_cmp_version = max(cmp_versions) if cmp_versions else None
 
     shot_files = []
     for index, (path, stage_code, version) in enumerate(parsed, start=1):
         id_match = re.match(r"^(F\d{3})_", path.name, flags=re.I)
-        is_final = stage_code == "cmp" and version_number(version) == final_cmp_version
+        is_final = (
+            stage_code == "cmp"
+            and not is_reposition_cmp(path, shot_id, stage_code)
+            and version_number(version) == final_cmp_version
+        )
         shot_files.append(
             ShotFile(
                 file_id=id_match.group(1).upper() if id_match else f"F{index:03d}",
