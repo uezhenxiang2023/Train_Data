@@ -1,0 +1,2378 @@
+#! /Applications/Nuke6.3v4/NukeX6.3v4.app/../Nuke6.3v4.app/Contents/MacOS/Nuke6.3v4 -nx
+version 6.3 v4
+define_window_layout_xml {<?xml version="1.0" encoding="UTF-8"?>
+<layout version="1.0">
+    <window x="0" y="22" w="1440" h="874" screen="0">
+        <splitter orientation="1">
+            <split size="836"/>
+            <splitter orientation="2">
+                <split size="560"/>
+                <dock id="" activePageId="Viewer.1">
+                    <page id="Viewer.1"/>
+                </dock>
+                <split size="288"/>
+                <dock id="" activePageId="Properties.1">
+                    <page id="Properties.1"/>
+                    <page id="Curve Editor.1"/>
+                </dock>
+            </splitter>
+            <split size="600"/>
+            <splitter orientation="2">
+                <split size="63"/>
+                <dock id="" activePageId="Toolbar.1">
+                    <page id="Toolbar.1"/>
+                </dock>
+                <split size="785"/>
+                <dock id="" activePageId="DAG.1">
+                    <page id="DAG.1"/>
+                    <page id="Script Editor.1"/>
+                    <page id="Error Console.1"/>
+                    <page id="DAG.2"/>
+                </dock>
+            </splitter>
+        </splitter>
+    </window>
+</layout>
+}
+Root {
+ inputs 0
+ name /Volumes/Work/Project/Flagup/TLP/task/guofu/nk/tst000001_cmp_test_v001_b001.nk
+ frame 100
+ first_frame 101
+ last_frame 200
+ format "2048 1556 0 0 2048 1556 1 2K_Super_35(full-ap)"
+ proxy_type scale
+ proxy_format "1024 778 0 0 1024 778 1 1K_Super_35(full-ap)"
+}
+Grade {
+ inputs 0
+ name Grade1
+ xpos 32
+ ypos -304
+}
+Blur {
+ name Blur1
+ xpos 32
+ ypos -280
+}
+Transform {
+ center {1024 778}
+ name Transform1
+ xpos 32
+ ypos -246
+}
+Group {
+ inputs 0
+ name Group1
+ note_font Verdana
+ xpos 73
+ ypos -167
+ mapsize {0.15 0.15}
+ addUserKnob {20 PegasusSlate}
+ addUserKnob {6 SnapShot +STARTLINE}
+ addUserKnob {4 LetterBox M {1.00 1.78 2.35 ""}}
+ addUserKnob {41 Font_English l "Font English" T native_text.font}
+ addUserKnob {41 Font_Chinese l "Font Chinese " T native_text_Chinese.font}
+ addUserKnob {41 SnapShotFile T Read1.file}
+ addUserKnob {1 Artist}
+ Artist "\$env(USER)"
+ addUserKnob {1 COMP_Version l "COMP Version"}
+ COMP_Version "\[string range \[file rootname \[file tail \[value root.name]]] end-7 end-5]\n"
+ addUserKnob {4 Department l CGDepartment M {ANI CMP CPT DMT EFX LGT MLD TEX TRK "" ""}}
+ addUserKnob {1 Version -STARTLINE}
+ Version n/a
+ addUserKnob {4 ProjectFrameRate M {23.98 24 25 29.97 30 ""}}
+ ProjectFrameRate 24
+ addUserKnob {1 FrameHandles l Handles}
+ FrameHandles 4+4
+ addUserKnob {41 output.first l "output range" T Retime1.output.first}
+ addUserKnob {41 output.last l "" -STARTLINE T Retime1.output.last}
+ addUserKnob {41 OutputResolution l "Output Resolution" T Reformat3.box_width}
+ addUserKnob {41 box_height l "" -STARTLINE T Reformat3.box_height}
+ addUserKnob {1 PegasusShotName l "Pegasus Shot Name"}
+ PegasusShotName "\[string range \[file rootname \[file tail \[value root.name]]] 0 8]"
+ addUserKnob {1 ClientShotName l "Client Shot Name"}
+ ClientShotName --
+ addUserKnob {41 message_7 l Description T Description1.message}
+ addUserKnob {41 message_8 l Notes T Notes1.message}
+ addUserKnob {6 LabelToggle_ctrl l "Show Label" +STARTLINE}
+ LabelToggle_ctrl true
+ addUserKnob {41 translate l "Label Translate" T Transform7.translate}
+}
+ BackdropNode {
+  inputs 0
+  name Slate_Text_User
+  xpos -688
+  ypos -765
+  bdwidth 253
+  bdheight 655
+ }
+ BackdropNode {
+  inputs 0
+  name Slate_Text_Embed
+  xpos -1036
+  ypos -765
+  bdwidth 286
+  bdheight 653
+ }
+ StickyNote {
+  inputs 0
+  name StickyNote2
+  label "\"Vendor\" text tool drives all text translates of the left column."
+  note_font_size 50
+  xpos -2289
+  ypos -885
+ }
+ StickyNote {
+  inputs 0
+  name StickyNote1
+  label "\"native_text\" tool expresses all fonts within script."
+  note_font_size 50
+  xpos -1373
+  ypos -1082
+ }
+ Read {
+  inputs 0
+  file /ibrix/BFX/gene/nuke/nuke6.0/SLATE/Soul_Surfer_Framing_Chart_v03_b.tif
+  format "2048 1556 0 0 2048 1556 1 2K_Super_35(full-ap)"
+  raw true
+  name Read7
+  selected true
+  xpos 350
+  ypos 471
+ }
+ Reformat {
+  box_width 2048
+  box_height 1556
+  box_fixed true
+  black_outside true
+  name Reformat_ALL
+  selected true
+  xpos 350
+  ypos 573
+ }
+ set C159dbd90 [stack 0]
+ Text {
+  inputs 0
+  message "\[value parent.ClientShotName]"
+  font "\[value native_text.font]"
+  Transform 1
+  translate {30 30}
+  scale 1.5
+  color {1 1 1 1}
+  name VFXID2
+  xpos 860
+  ypos 348
+ }
+ Text {
+  message "0\[frame]"
+  font "\[value native_text.font]"
+  xjustify right
+  Transform 1
+  translate {1900 30}
+  name LabelFrame
+  xpos 860
+  ypos 376
+ }
+ Transform {
+  center {60 52}
+  name Transform7
+  xpos 860
+  ypos 404
+ }
+set N159f8250 [stack 0]
+ TransformMasked {
+  translate {0 354}
+  center {1024 778}
+  name Transform6
+  label 2.35
+  xpos 968
+  ypos 443
+ }
+push $N159f8250
+ TransformMasked {
+  translate {0 204}
+  center {1024 778}
+  name Transform4
+  label 1.78
+  xpos 860
+  ypos 442
+ }
+push $N159f8250
+ NoOp {
+  name NoOp1
+  xpos 752
+  ypos 456
+ }
+ Switch {
+  inputs 3
+  which {{parent.LetterBox i}}
+  name Switch1
+  xpos 860
+  ypos 523
+ }
+ Input {
+  inputs 0
+  name BG
+  xpos 571
+  ypos 367
+ }
+ Shuffle {
+  alpha white
+  name Shuffle2
+  xpos 571
+  ypos 422
+ }
+ Retime {
+  input.first {{parent.FrameRange2.knob.first_frame}}
+  input.first_lock true
+  input.last {{root.last_frame}}
+  input.last_lock true
+  output.first 101
+  output.first_lock true
+  output.last 200
+  before black
+  after black
+  name Retime1
+  xpos 571
+  ypos 475
+ }
+ Read {
+  inputs 0
+  file /Volumes/guofu/GuoFu/Ibrix/FCT/099/elem/editorial/reference/SnapShot/fct099_sup_SnapShot_v001.jpg
+  format "2048 1556 0 0 2048 1556 1 2K_Super_35(full-ap)"
+  origset true
+  name Read1
+  xpos 303
+  ypos -235
+ }
+ Colorspace {
+  colorspace_in Cineon
+  colorspace_out sRGB
+  name Colorspace2
+  xpos 303
+  ypos -153
+  disable true
+ }
+ Shuffle {
+  alpha white
+  name Shuffle3
+  xpos 303
+  ypos -125
+ }
+ Reformat {
+  format "1920 1080 0 0 1920 1080 1 HD"
+  black_outside true
+  pbb true
+  name Reformat1
+  xpos 303
+  ypos -101
+ }
+ Transform {
+  translate {-280 -30}
+  scale 0.35
+  center {1920 1080}
+  name Transform1
+  xpos 303
+  ypos -67
+ }
+ Read {
+  inputs 0
+  file /Users/guofu/.nuke/icons/公司logo上下白字.png
+  format "4135 2756 0 0 4135 2756 1 "
+  origset true
+  premultiplied true
+  name Read3
+  xpos -200
+  ypos -187
+ }
+ NoOp {
+  name Input_footage
+  xpos -200
+  ypos -105
+ }
+ Transform {
+  translate {-1554 -466}
+  scale 0.15
+  center {2067.5 1378}
+  name Transform8
+  xpos -200
+  ypos -81
+ }
+ Constant {
+  inputs 0
+  channels rgb
+  color {0 0 0 0}
+  format "1920 1080 0 0 1920 1080 1 HD"
+  name Constant60
+  xpos -931
+  ypos -718
+ }
+set N29d2ca30 [stack 0]
+ Text {
+  message "Vendor: "
+  font "\[value native_text.font]"
+  size 39
+  xjustify right
+  Transform 1
+  translate {650 485}
+  color {0.502886 0.502886 0.502886 0}
+  name Vendor
+  tile_color 0xff0000ff
+  xpos -931
+  ypos -646
+ }
+ Text {
+  message "Artist: "
+  font "\[value native_text.font]"
+  size 39
+  xjustify right
+  Transform 1
+  translate {650 442}
+  color {0.502886 0.502886 0.502886 0}
+  name artist
+  xpos -931
+  ypos -618
+ }
+ Text {
+  message "CMP Version: "
+  font "\[value native_text.font]"
+  size 39
+  xjustify right
+  Transform 1
+  box {0 -3 0 -3}
+  translate {650 399}
+  color {0.502886 0.502886 0.502886 0}
+  name CMPVersion3
+  xpos -931
+  ypos -590
+ }
+ Text {
+  message "CG(\[value parent.Department]) Version: "
+  font "\[value native_text.font]"
+  size 39
+  xjustify right
+  Transform 1
+  box {0 -3 0 -3}
+  translate {650 350}
+  color {0.502886 0.502886 0.502886 0}
+  name CGDepartmentVersion
+  xpos -931
+  ypos -562
+ }
+ Text {
+  message "Resolution: "
+  font "\[value native_text.font]"
+  size 39
+  xjustify right
+  Transform 1
+  translate {1225 485}
+  color {0.502886 0.502886 0.502886 0}
+  name Resolution
+  xpos -931
+  ypos -534
+ }
+ Text {
+  message "Frame Rate: "
+  font "\[value native_text.font]"
+  size 39
+  xjustify right
+  Transform 1
+  translate {{parent.Resolution.translate.main.x i} 442}
+  color {0.502886 0.502886 0.502886 0}
+  name FrameRate
+  xpos -931
+  ypos -506
+ }
+ Text {
+  message "Frame Range: "
+  font "\[value native_text.font]"
+  size 39
+  xjustify right
+  Transform 1
+  translate {{parent.Resolution.translate.main.x i} 399}
+  color {0.502886 0.502886 0.502886 0}
+  name FrameRange
+  xpos -931
+  ypos -478
+ }
+ Text {
+  message "Handles: "
+  font "\[value native_text.font]"
+  size 39
+  xjustify right
+  Transform 1
+  translate {{parent.Resolution.translate.main.x} 355}
+  color {0.502886 0.502886 0.502886 0}
+  name Handles
+  xpos -931
+  ypos -450
+ }
+ Text {
+  message "Date: "
+  font "\[value native_text.font]"
+  size 39
+  xjustify right
+  Transform 1
+  translate {{parent.Resolution.translate.main.x i} 310}
+  color {0.502886 0.502886 0.502886 0}
+  name Date
+  xpos -931
+  ypos -422
+ }
+ Text {
+  message " "
+  font "\[value native_text.font]"
+  Transform 1
+  box {-165 0 -165 0}
+  translate {290 630}
+  scale 1.5
+  color {1 0 0 1}
+  name VFXID
+  xpos -931
+  ypos -394
+ }
+ Text {
+  message "Pegasus Shot Name:"
+  font "\[value native_text.font]"
+  xjustify right
+  Transform 1
+  box {0 0 0 -2}
+  translate {637 553}
+  scale 0.6
+  color 0.3
+  name BASE_Shot_Name
+  xpos -931
+  ypos -366
+ }
+ Text {
+  message "Description: "
+  font "\[value native_text.font]"
+  size 39
+  xjustify right
+  Transform 1
+  translate {550 250}
+  color {0.502886 0.502886 0.502886 0}
+  name Description
+  xpos -931
+  ypos -338
+ }
+ Text {
+  message "Notes: "
+  font "\[value native_text.font]"
+  size 39
+  xjustify right
+  Transform 1
+  translate {430 160}
+  color {0.502886 0.502886 0.502886 0}
+  name Notes
+  xpos -931
+  ypos -310
+ }
+push $N29d2ca30
+ Dot {
+  name Dot1
+  xpos -566
+  ypos -691
+ }
+ Text {
+  message Pegasus
+  font "\[value native_text.font]"
+  size 39
+  Transform 1
+  translate {{Vendor.translate.x i} {Vendor.translate.y i}}
+  color {1 1 1 1}
+  name Vendor1
+  xpos -600
+  ypos -647
+ }
+ Text {
+  message "\[value parent.Artist]"
+  font "\[value native_text.font]"
+  size 39
+  Transform 1
+  translate {{parent.artist.translate.main i} {parent.artist.translate.main i}}
+  color {1 1 1 1}
+  name Artist1
+  xpos -600
+  ypos -619
+ }
+ Text {
+  message "\[value parent.COMP_Version]"
+  font "\[value native_text.font]"
+  size 39
+  Transform 1
+  translate {{parent.CMPVersion3.translate.main i} {parent.CMPVersion3.translate.main-6 i}}
+  center {0 -4}
+  color {1 1 1 1}
+  name CMPVersion2
+  xpos -600
+  ypos -591
+ }
+ Text {
+  message "\[value parent.Version]"
+  font "\[value native_text.font]"
+  size 39
+  Transform 1
+  translate {{CGDepartmentVersion.translate.x i} {CGDepartmentVersion.translate.y-6 i}}
+  color {1 1 1 1}
+  name CGDepartmentVersion1
+  xpos -600
+  ypos -563
+ }
+ Text {
+  message "\[value Reformat3.box_width] x \[value Reformat3.box_height]"
+  font "\[value native_text.font]"
+  size 39
+  Transform 1
+  translate {{Resolution.translate.x i} {Resolution.translate.y i}}
+  color {1 1 1 1}
+  name Resolution1
+  xpos -600
+  ypos -535
+ }
+ Text {
+  message "\[value parent.ProjectFrameRate] fps"
+  font "\[value native_text.font]"
+  size 39
+  Transform 1
+  translate {{FrameRate.translate.x i} {FrameRate.translate.y i}}
+  color {1 1 1 1}
+  name FrameRate1
+  xpos -600
+  ypos -507
+ }
+ Text {
+  message "\[value root.first_frame] - \[value root.last_frame] "
+  font "\[value native_text.font]"
+  size 39
+  translate {{FrameRange.translate.x i} {FrameRange.translate.y i}}
+  color {1 1 1 1}
+  name FrameRange1
+  xpos -600
+  ypos -479
+ }
+ Text {
+  message "\[value parent.FrameHandles] Frame Handles"
+  font "\[value native_text.font]"
+  size 39
+  Transform 1
+  translate {{Handles.translate.x i} {Handles.translate.y i}}
+  color {1 1 1 1}
+  name Handles1
+  xpos -600
+  ypos -451
+ }
+ Text {
+  message "\[date %m/%d/%Y]"
+  font "\[value native_text.font]"
+  size 39
+  Transform 1
+  translate {{Date.translate.x i} {Date.translate.y i}}
+  color {1 1 1 1}
+  name Date1
+  xpos -600
+  ypos -423
+ }
+ Text {
+  message "\[value parent.ClientShotName]"
+  font "\[value native_text.font]"
+  Transform 1
+  translate {{VFXID.translate.x i x44 356} {VFXID.translate.y i x44 706}}
+  color {1 0 0 1}
+  name VFXID1
+  xpos -600
+  ypos -391
+ }
+ Text {
+  message " \[value parent.PegasusShotName]"
+  font "\[value native_text.font]"
+  Transform 1
+  translate {{BASE_Shot_Name.translate.x i} {BASE_Shot_Name.translate.y i}}
+  scale 0.6
+  color 0.3
+  name BASE_Shot_Name1
+  xpos -600
+  ypos -365
+ }
+ Text {
+  message --
+  font "\[value native_text_Chinese.font]"
+  size 39
+  Transform 1
+  translate {{Description.translate.x i} {Description.translate.y i}}
+  color {1 1 1 1}
+  name Description1
+  xpos -600
+  ypos -339
+ }
+ Text {
+  cliptype none
+  message --
+  font "\[value native_text_Chinese.font]"
+  size 39
+  Transform 1
+  translate {{Notes.translate.x i} {Notes.translate.y i}}
+  color {1 1 1 1}
+  name Notes1
+  xpos -600
+  ypos -315
+ }
+ Merge2 {
+  inputs 2
+  name Merge1
+  xpos -763
+  ypos -18
+ }
+ Transform {
+  translate {0 78}
+  center {960 540}
+  name Transform5
+  xpos -597
+  ypos -18
+ }
+ Merge2 {
+  inputs 2
+  name Merge5
+  xpos -200
+  ypos -18
+ }
+ Reformat {
+  type "to box"
+  box_width 1920
+  box_height 1080
+  box_fixed true
+  black_outside true
+  name Reformat2
+  xpos -3
+  ypos -18
+ }
+ Merge2 {
+  inputs 2
+  operation under
+  name Merge2
+  label "\[value mix]"
+  xpos 303
+  ypos -23
+  disable {{!parent.SnapShot i}}
+ }
+ Group {
+  inputs 0
+  name shader_bar
+  xpos 469
+  ypos -42
+ }
+  BackdropNode {
+   inputs 0
+   name Guides
+   xpos -1134
+   ypos -230
+   bdwidth 359
+   bdheight 268
+  }
+  BackdropNode {
+   inputs 0
+   name Macbeth_Chart
+   xpos -1808
+   ypos -911
+   bdwidth 352
+   bdheight 609
+  }
+  BackdropNode {
+   inputs 0
+   name Data_Linear
+   xpos -1330
+   ypos -1027
+   bdwidth 461
+   bdheight 611
+  }
+  BackdropNode {
+   inputs 0
+   name Visual_Linear
+   xpos -771
+   ypos -907
+   bdwidth 456
+   bdheight 615
+  }
+  BackdropNode {
+   inputs 0
+   name Colour_Bars
+   xpos -1532
+   ypos -268
+   bdwidth 233
+   bdheight 252
+  }
+  ColorBars {
+   inputs 0
+   format "1920 1080 0 0 1920 1080 1 HD"
+   name ColorBars1
+   xpos -1456
+   ypos -200
+  }
+  Transform {
+   translate {-950 0}
+   rotate 90
+   scale {0.57 0.57}
+   center {960 540}
+   filter Impulse
+   name Transform5
+   xpos -1456
+   ypos -128
+  }
+  Crop {
+   box {0 0 234 1080}
+   name Crop2
+   xpos -1456
+   ypos -104
+  }
+  Constant {
+   inputs 0
+   channels rgb
+   color {0.0122865 0.0781874 0.234551 0}
+   format "1920 1080 0 0 1920 1080 1 HD"
+   name Constant1
+   xpos -1783
+   ypos -890
+   postage_stamp false
+  }
+  Transform {
+   translate {1693 954}
+   rotate -90
+   scale {0.0275 0.035}
+   filter Impulse
+   name Transform6
+   xpos -1783
+   ypos -870
+  }
+  Constant {
+   inputs 0
+   channels rgb
+   color {0.366253 0.0221739 0.132868 0}
+   format "1920 1080 0 0 1920 1080 1 HD"
+   name Constant2
+   xpos -1563
+   ypos -842
+   postage_stamp false
+  }
+  Transform {
+   translate {1693 901}
+   rotate -90
+   scale {0.0275 0.035}
+   filter Impulse
+   name Transform7
+   xpos -1673
+   ypos -842
+  }
+  Merge2 {
+   inputs 2
+   name Merge6
+   xpos -1783
+   ypos -842
+  }
+  Constant {
+   inputs 0
+   channels rgb
+   color {0.760524 0.55834 0.0251869 0}
+   format "1920 1080 0 0 1920 1080 1 HD"
+   name Constant3
+   xpos -1563
+   ypos -818
+   postage_stamp false
+  }
+  Transform {
+   translate {1693 848}
+   rotate -90
+   scale {0.0275 0.035}
+   filter Impulse
+   name Transform8
+   xpos -1673
+   ypos -818
+  }
+  Merge2 {
+   inputs 2
+   name Merge7
+   xpos -1788
+   ypos -818
+  }
+  Constant {
+   inputs 0
+   channels rgb
+   color {0.3564 0.00303527 0.00367651 0}
+   format "1920 1080 0 0 1920 1080 1 HD"
+   name Constant4
+   xpos -1563
+   ypos -794
+   postage_stamp false
+  }
+  Transform {
+   translate {1693 795}
+   rotate -90
+   scale {0.0275 0.035}
+   filter Impulse
+   name Transform9
+   xpos -1673
+   ypos -794
+  }
+  Merge2 {
+   inputs 2
+   name Merge8
+   xpos -1783
+   ypos -794
+  }
+  Constant {
+   inputs 0
+   channels rgb
+   color {0.017642 0.184475 0.0221739 0}
+   format "1920 1080 0 0 1920 1080 1 HD"
+   name Constant5
+   xpos -1563
+   ypos -770
+   postage_stamp false
+  }
+  Transform {
+   translate {1693 742}
+   rotate -90
+   scale {0.0275 0.035}
+   filter Impulse
+   name Transform10
+   xpos -1673
+   ypos -770
+  }
+  Merge2 {
+   inputs 2
+   name Merge9
+   xpos -1783
+   ypos -770
+  }
+  Constant {
+   inputs 0
+   channels rgb
+   color {0.00273174 0.00477695 0.104616 0}
+   format "1920 1080 0 0 1920 1080 1 HD"
+   name Constant6
+   xpos -1563
+   ypos -746
+   postage_stamp false
+  }
+  Transform {
+   translate {1693 689}
+   rotate -90
+   scale {0.0275 0.035}
+   filter Impulse
+   name Transform11
+   xpos -1673
+   ypos -746
+  }
+  Merge2 {
+   inputs 2
+   name Merge10
+   xpos -1783
+   ypos -746
+  }
+  Constant {
+   inputs 0
+   channels rgb
+   color {0.545724 0.258183 0.00972122 0}
+   format "1920 1080 0 0 1920 1080 1 HD"
+   name Constant7
+   xpos -1563
+   ypos -722
+   postage_stamp false
+  }
+  Transform {
+   translate {1693 636}
+   rotate -90
+   scale {0.0275 0.035}
+   filter Impulse
+   name Transform12
+   xpos -1673
+   ypos -722
+  }
+  Merge2 {
+   inputs 2
+   name Merge11
+   xpos -1783
+   ypos -722
+  }
+  Constant {
+   inputs 0
+   channels rgb
+   color {0.194618 0.401978 0.0295568 0}
+   format "1920 1080 0 0 1920 1080 1 HD"
+   name Constant8
+   xpos -1563
+   ypos -698
+   postage_stamp false
+  }
+  Transform {
+   translate {1693 583}
+   rotate -90
+   scale {0.0275 0.035}
+   filter Impulse
+   name Transform13
+   xpos -1673
+   ypos -698
+  }
+  Merge2 {
+   inputs 2
+   name Merge12
+   xpos -1783
+   ypos -698
+  }
+  Constant {
+   inputs 0
+   channels rgb
+   color {0.028426 0.00439144 0.0331048 0}
+   format "1920 1080 0 0 1920 1080 1 HD"
+   name Constant9
+   xpos -1563
+   ypos -674
+   postage_stamp false
+  }
+  Transform {
+   translate {1693 530}
+   rotate -90
+   scale {0.0275 0.035}
+   filter Impulse
+   name Transform14
+   xpos -1673
+   ypos -674
+  }
+  Merge2 {
+   inputs 2
+   name Merge13
+   xpos -1783
+   ypos -674
+  }
+  Constant {
+   inputs 0
+   channels rgb
+   color {0.462077 0.0221739 0.031896 0}
+   format "1920 1080 0 0 1920 1080 1 HD"
+   name Constant10
+   xpos -1563
+   ypos -650
+   postage_stamp false
+  }
+  Transform {
+   translate {1693 477}
+   rotate -90
+   scale {0.0275 0.035}
+   filter Impulse
+   name Transform15
+   xpos -1673
+   ypos -650
+  }
+  Merge2 {
+   inputs 2
+   name Merge14
+   xpos -1783
+   ypos -650
+  }
+  Constant {
+   inputs 0
+   channels rgb
+   color {0.017642 0.0295568 0.219526 0}
+   format "1920 1080 0 0 1920 1080 1 HD"
+   name Constant11
+   xpos -1563
+   ypos -626
+   postage_stamp false
+  }
+  Transform {
+   translate {1693 424}
+   rotate -90
+   scale {0.0275 0.035}
+   filter Impulse
+   name Transform16
+   xpos -1673
+   ypos -626
+  }
+  Merge2 {
+   inputs 2
+   name Merge15
+   xpos -1783
+   ypos -626
+  }
+  Constant {
+   inputs 0
+   channels rgb
+   color {0.48515 0.0953074 0.00367651 0}
+   format "1920 1080 0 0 1920 1080 1 HD"
+   name Constant12
+   xpos -1563
+   ypos -602
+   postage_stamp false
+  }
+  Transform {
+   translate {1693 371}
+   rotate -90
+   scale {0.0275 0.035}
+   filter Impulse
+   name Transform17
+   xpos -1673
+   ypos -602
+  }
+  Merge2 {
+   inputs 2
+   name Merge16
+   xpos -1783
+   ypos -602
+  }
+  Constant {
+   inputs 0
+   channels rgb
+   color {0.0930589 0.381326 0.3564 0}
+   format "1920 1080 0 0 1920 1080 1 HD"
+   name Constant13
+   xpos -1563
+   ypos -578
+   postage_stamp false
+  }
+  Transform {
+   translate {1693 318}
+   rotate -90
+   scale {0.0275 0.035}
+   filter Impulse
+   name Transform18
+   xpos -1673
+   ypos -578
+  }
+  Merge2 {
+   inputs 2
+   name Merge17
+   xpos -1783
+   ypos -578
+  }
+  Constant {
+   inputs 0
+   channels rgb
+   color {0.132868 0.0886556 0.287441 0}
+   format "1920 1080 0 0 1920 1080 1 HD"
+   name Constant14
+   xpos -1563
+   ypos -554
+   postage_stamp false
+  }
+  Transform {
+   translate {1693 265}
+   rotate -90
+   scale {0.0275 0.035}
+   filter Impulse
+   name Transform19
+   xpos -1673
+   ypos -554
+  }
+  Merge2 {
+   inputs 2
+   name Merge18
+   xpos -1783
+   ypos -554
+  }
+  Constant {
+   inputs 0
+   channels rgb
+   color {0.0262412 0.0561285 0.00699541 0}
+   format "1920 1080 0 0 1920 1080 1 HD"
+   name Constant15
+   xpos -1563
+   ypos -530
+   postage_stamp false
+  }
+  Transform {
+   translate {1693 212}
+   rotate -90
+   scale {0.0275 0.035}
+   filter Impulse
+   name Transform20
+   xpos -1673
+   ypos -530
+  }
+  Merge2 {
+   inputs 2
+   name Merge19
+   xpos -1783
+   ypos -530
+  }
+  Constant {
+   inputs 0
+   channels rgb
+   color {0.0368894 0.0761854 0.181164 0}
+   format "1920 1080 0 0 1920 1080 1 HD"
+   name Constant16
+   xpos -1563
+   ypos -506
+   postage_stamp false
+  }
+  Transform {
+   translate {1693 159}
+   rotate -90
+   scale {0.0275 0.035}
+   filter Impulse
+   name Transform21
+   xpos -1673
+   ypos -506
+  }
+  Merge2 {
+   inputs 2
+   name Merge20
+   xpos -1783
+   ypos -506
+  }
+  Constant {
+   inputs 0
+   channels rgb
+   color {0.539479 0.158961 0.124772 0}
+   format "1920 1080 0 0 1920 1080 1 HD"
+   name Constant17
+   xpos -1563
+   ypos -482
+   postage_stamp false
+  }
+  Transform {
+   translate {1693 106}
+   rotate -90
+   scale {0.0275 0.035}
+   filter Impulse
+   name Transform22
+   xpos -1673
+   ypos -482
+  }
+  Merge2 {
+   inputs 2
+   name Merge21
+   xpos -1783
+   ypos -482
+  }
+  Constant {
+   inputs 0
+   channels rgb
+   color {0.0561285 0.0144438 0.00651209 0}
+   format "1920 1080 0 0 1920 1080 1 HD"
+   name Constant18
+   xpos -1563
+   ypos -458
+   postage_stamp false
+  }
+  Transform {
+   translate {1693 53}
+   rotate -90
+   scale {0.0275 0.035}
+   filter Impulse
+   name Transform23
+   xpos -1673
+   ypos -458
+  }
+  Merge2 {
+   inputs 2
+   name Merge22
+   xpos -1783
+   ypos -458
+  }
+  Reformat {
+   type scale
+   scale {1 0.9}
+   clamp true
+   black_outside true
+   pbb true
+   name Reformat6
+   xpos -1783
+   ypos -434
+  }
+  Constant {
+   inputs 0
+   channels rgb
+   format "1920 1080 0 0 1920 1080 1 HD"
+   name Constant57
+   xpos -1603
+   ypos -367
+   postage_stamp false
+  }
+  Merge2 {
+   inputs 2
+   name Merge3
+   xpos -1783
+   ypos -367
+  }
+  Text {
+   message Macbeth
+   font "\[value native_text.font]"
+   size 28
+   xjustify right
+   yjustify bottom
+   Transform 1
+   translate {1698 908}
+   rotate -90
+   name Macbeth_Text
+   xpos -1783
+   ypos -343
+  }
+  Constant {
+   inputs 0
+   channels rgb
+   color {0 0 0 0}
+   format "1920 1080 0 0 1920 1080 1 HD"
+   name Constant19
+   xpos -1256
+   ypos -997
+   postage_stamp false
+  }
+  Transform {
+   translate {1756 954}
+   rotate -90
+   scale {0.029 0.076}
+   filter Impulse
+   name Transform24
+   xpos -1256
+   ypos -973
+  }
+  Constant {
+   inputs 0
+   channels rgb
+   color {0.0466651 0.0466651 0.0466651 0}
+   format "1920 1080 0 0 1920 1080 1 HD"
+   name Constant20
+   xpos -1036
+   ypos -949
+   postage_stamp false
+  }
+  Transform {
+   translate {1756 898}
+   rotate -90
+   scale {0.029 0.076}
+   filter Impulse
+   name Transform25
+   xpos -1146
+   ypos -949
+  }
+  Merge2 {
+   inputs 2
+   name Merge23
+   xpos -1256
+   ypos -949
+  }
+  Constant {
+   inputs 0
+   channels rgb
+   color {0.104616 0.104616 0.104616 0}
+   format "1920 1080 0 0 1920 1080 1 HD"
+   name Constant21
+   xpos -1036
+   ypos -925
+   postage_stamp false
+  }
+  Transform {
+   translate {1756 842}
+   rotate -90
+   scale {0.029 0.076}
+   filter Impulse
+   name Transform26
+   xpos -1146
+   ypos -925
+  }
+  Merge2 {
+   inputs 2
+   name Merge24
+   xpos -1256
+   ypos -925
+  }
+  Constant {
+   inputs 0
+   channels rgb
+   color {0.158961 0.158961 0.158961 0}
+   format "1920 1080 0 0 1920 1080 1 HD"
+   name Constant22
+   xpos -1036
+   ypos -901
+   postage_stamp false
+  }
+  Transform {
+   translate {1756 786}
+   rotate -90
+   scale {0.029 0.076}
+   filter Impulse
+   name Transform27
+   xpos -1146
+   ypos -901
+  }
+  Merge2 {
+   inputs 2
+   name Merge25
+   xpos -1256
+   ypos -901
+  }
+  Constant {
+   inputs 0
+   channels rgb
+   color {0.205079 0.205079 0.205079 0}
+   format "1920 1080 0 0 1920 1080 1 HD"
+   name Constant23
+   xpos -1036
+   ypos -877
+   postage_stamp false
+  }
+  Transform {
+   translate {1756 730}
+   rotate -90
+   scale {0.029 0.076}
+   filter Impulse
+   name Transform28
+   xpos -1146
+   ypos -877
+  }
+  Merge2 {
+   inputs 2
+   name Merge26
+   xpos -1256
+   ypos -877
+  }
+  Constant {
+   inputs 0
+   channels rgb
+   color {0.283149 0.283149 0.283149 0}
+   format "1920 1080 0 0 1920 1080 1 HD"
+   name Constant24
+   xpos -1036
+   ypos -853
+   postage_stamp false
+  }
+  Transform {
+   translate {1756 674}
+   rotate -90
+   scale {0.029 0.076}
+   filter Impulse
+   name Transform29
+   xpos -1146
+   ypos -853
+  }
+  Merge2 {
+   inputs 2
+   name Merge27
+   xpos -1256
+   ypos -853
+  }
+  Constant {
+   inputs 0
+   channels rgb
+   color {0.341914 0.341914 0.341914 0}
+   format "1920 1080 0 0 1920 1080 1 HD"
+   name Constant25
+   xpos -1036
+   ypos -829
+   postage_stamp false
+  }
+  Transform {
+   translate {1756 618}
+   rotate -90
+   scale {0.029 0.076}
+   filter Impulse
+   name Transform30
+   xpos -1146
+   ypos -829
+  }
+  Merge2 {
+   inputs 2
+   name Merge28
+   xpos -1256
+   ypos -829
+  }
+  Constant {
+   inputs 0
+   channels rgb
+   color {0.391572 0.391572 0.391572 0}
+   format "1920 1080 0 0 1920 1080 1 HD"
+   name Constant26
+   xpos -1036
+   ypos -805
+   postage_stamp false
+  }
+  Transform {
+   translate {1756 562}
+   rotate -90
+   scale {0.029 0.076}
+   filter Impulse
+   name Transform31
+   xpos -1146
+   ypos -805
+  }
+  Merge2 {
+   inputs 2
+   name Merge29
+   xpos -1256
+   ypos -805
+  }
+  Constant {
+   inputs 0
+   channels rgb
+   color {0.462077 0.462077 0.462077 0}
+   format "1920 1080 0 0 1920 1080 1 HD"
+   name Constant27
+   xpos -1036
+   ypos -781
+   postage_stamp false
+  }
+  Transform {
+   translate {1756 506}
+   rotate -90
+   scale {0.029 0.076}
+   filter Impulse
+   name Transform32
+   xpos -1146
+   ypos -781
+  }
+  Merge2 {
+   inputs 2
+   name Merge30
+   xpos -1256
+   ypos -781
+  }
+  Constant {
+   inputs 0
+   channels rgb
+   color {0.527115 0.527115 0.527115 0}
+   format "1920 1080 0 0 1920 1080 1 HD"
+   name Constant28
+   xpos -1036
+   ypos -757
+   postage_stamp false
+  }
+  Transform {
+   translate {1756 450}
+   rotate -90
+   scale {0.029 0.076}
+   filter Impulse
+   name Transform33
+   xpos -1146
+   ypos -757
+  }
+  Merge2 {
+   inputs 2
+   name Merge31
+   xpos -1256
+   ypos -757
+  }
+  Constant {
+   inputs 0
+   channels rgb
+   color {0.597202 0.597202 0.597202 0}
+   format "1920 1080 0 0 1920 1080 1 HD"
+   name Constant29
+   xpos -1036
+   ypos -733
+   postage_stamp false
+  }
+  Transform {
+   translate {1756 394}
+   rotate -90
+   scale {0.029 0.076}
+   filter Impulse
+   name Transform34
+   xpos -1146
+   ypos -733
+  }
+  Merge2 {
+   inputs 2
+   name Merge32
+   xpos -1256
+   ypos -733
+  }
+  Constant {
+   inputs 0
+   channels rgb
+   color {0.658375 0.658375 0.658375 0}
+   format "1920 1080 0 0 1920 1080 1 HD"
+   name Constant30
+   xpos -1036
+   ypos -709
+   postage_stamp false
+  }
+  Transform {
+   translate {1756 338}
+   rotate -90
+   scale {0.029 0.076}
+   filter Impulse
+   name Transform35
+   xpos -1146
+   ypos -709
+  }
+  Merge2 {
+   inputs 2
+   name Merge33
+   xpos -1256
+   ypos -709
+  }
+  Constant {
+   inputs 0
+   channels rgb
+   color {0.730461 0.730461 0.730461 0}
+   format "1920 1080 0 0 1920 1080 1 HD"
+   name Constant31
+   xpos -1036
+   ypos -685
+   postage_stamp false
+  }
+  Transform {
+   translate {1756 282}
+   rotate -90
+   scale {0.029 0.076}
+   filter Impulse
+   name Transform36
+   xpos -1146
+   ypos -685
+  }
+  Merge2 {
+   inputs 2
+   name Merge34
+   xpos -1256
+   ypos -685
+  }
+  Constant {
+   inputs 0
+   channels rgb
+   color {0.791298 0.791298 0.791298 0}
+   format "1920 1080 0 0 1920 1080 1 HD"
+   name Constant32
+   xpos -1036
+   ypos -661
+   postage_stamp false
+  }
+  Transform {
+   translate {1756 226}
+   rotate -90
+   scale {0.029 0.076}
+   filter Impulse
+   name Transform37
+   xpos -1146
+   ypos -661
+  }
+  Merge2 {
+   inputs 2
+   name Merge35
+   xpos -1256
+   ypos -661
+  }
+  Constant {
+   inputs 0
+   channels rgb
+   color {0.854993 0.854993 0.854993 0}
+   format "1920 1080 0 0 1920 1080 1 HD"
+   name Constant33
+   xpos -1036
+   ypos -637
+   postage_stamp false
+  }
+  Transform {
+   translate {1756 170}
+   rotate -90
+   scale {0.029 0.076}
+   filter Impulse
+   name Transform38
+   xpos -1146
+   ypos -637
+  }
+  Merge2 {
+   inputs 2
+   name Merge36
+   xpos -1256
+   ypos -637
+  }
+  Constant {
+   inputs 0
+   channels rgb
+   color {0.938686 0.938686 0.938686 0}
+   format "1920 1080 0 0 1920 1080 1 HD"
+   name Constant34
+   xpos -1036
+   ypos -613
+   postage_stamp false
+  }
+  Transform {
+   translate {1756 114}
+   rotate -90
+   scale {0.029 0.076}
+   filter Impulse
+   name Transform39
+   xpos -1146
+   ypos -613
+  }
+  Merge2 {
+   inputs 2
+   name Merge37
+   xpos -1256
+   ypos -613
+  }
+  Constant {
+   inputs 0
+   channels rgb
+   color {1 1 1 1}
+   format "1920 1080 0 0 1920 1080 1 HD"
+   name Constant35
+   xpos -1036
+   ypos -589
+   postage_stamp false
+  }
+  Transform {
+   translate {1756 58}
+   rotate -90
+   scale {0.03 0.076}
+   filter Impulse
+   name Transform40
+   xpos -1146
+   ypos -589
+  }
+  Merge2 {
+   inputs 2
+   name Merge38
+   xpos -1256
+   ypos -589
+  }
+  Reformat {
+   type scale
+   scale {1 0.9}
+   clamp true
+   black_outside true
+   pbb true
+   name Reformat5
+   xpos -1256
+   ypos -565
+  }
+  Constant {
+   inputs 0
+   channels rgb
+   format "1920 1080 0 0 1920 1080 1 HD"
+   name Constant58
+   xpos -1099
+   ypos -524
+   postage_stamp false
+  }
+  Merge2 {
+   inputs 2
+   name Merge4
+   xpos -1256
+   ypos -524
+  }
+  Text {
+   message "Data\nLinear"
+   font "\[value native_text.font]"
+   size 28
+   xjustify right
+   yjustify bottom
+   Transform 1
+   translate {1770 908}
+   rotate -90
+   name DataLinear_Text
+   selected true
+   xpos -1256
+   ypos -500
+  }
+  Constant {
+   inputs 0
+   channels rgb
+   color {0 0 0 0}
+   format "1920 1080 0 0 1920 1080 1 HD"
+   name Constant36
+   xpos -696
+   ypos -876
+   postage_stamp false
+  }
+  Transform {
+   translate {1838 954}
+   rotate -90
+   scale {0.029 0.076}
+   filter Impulse
+   name Transform41
+   xpos -696
+   ypos -852
+  }
+  Constant {
+   inputs 0
+   channels rgb
+   color {0.000910581 0.000910581 0.000910581 0}
+   format "1920 1080 0 0 1920 1080 1 HD"
+   name Constant37
+   xpos -476
+   ypos -828
+   postage_stamp false
+  }
+  Transform {
+   translate {1838 898}
+   rotate -90
+   scale {0.029 0.076}
+   filter Impulse
+   name Transform42
+   xpos -586
+   ypos -828
+  }
+  Merge2 {
+   inputs 2
+   name Merge39
+   xpos -696
+   ypos -828
+  }
+  Constant {
+   inputs 0
+   channels rgb
+   color {0.00212469 0.00212469 0.00212469 0}
+   format "1920 1080 0 0 1920 1080 1 HD"
+   name Constant38
+   xpos -476
+   ypos -804
+   postage_stamp false
+  }
+  Transform {
+   translate {1838 842}
+   rotate -90
+   scale {0.029 0.076}
+   filter Impulse
+   name Transform43
+   xpos -586
+   ypos -804
+  }
+  Merge2 {
+   inputs 2
+   name Merge40
+   xpos -696
+   ypos -804
+  }
+  Constant {
+   inputs 0
+   channels rgb
+   color {0.00518152 0.00518152 0.00518152 0}
+   format "1920 1080 0 0 1920 1080 1 HD"
+   name Constant39
+   xpos -476
+   ypos -780
+   postage_stamp false
+  }
+  Transform {
+   translate {1838 786}
+   rotate -90
+   scale {0.029 0.076}
+   filter Impulse
+   name Transform44
+   xpos -586
+   ypos -780
+  }
+  Merge2 {
+   inputs 2
+   name Merge41
+   xpos -696
+   ypos -780
+  }
+  Constant {
+   inputs 0
+   channels rgb
+   color {0.0109601 0.0109601 0.0109601 0}
+   format "1920 1080 0 0 1920 1080 1 HD"
+   name Constant40
+   xpos -476
+   ypos -756
+   postage_stamp false
+  }
+  Transform {
+   translate {1838 730}
+   rotate -90
+   scale {0.029 0.076}
+   filter Impulse
+   name Transform45
+   xpos -586
+   ypos -756
+  }
+  Merge2 {
+   inputs 2
+   name Merge42
+   xpos -696
+   ypos -756
+  }
+  Constant {
+   inputs 0
+   channels rgb
+   color {0.0221739 0.0221739 0.0221739 0}
+   format "1920 1080 0 0 1920 1080 1 HD"
+   name Constant41
+   xpos -476
+   ypos -732
+   postage_stamp false
+  }
+  Transform {
+   translate {1838 674}
+   rotate -90
+   scale {0.029 0.076}
+   filter Impulse
+   name Transform46
+   xpos -586
+   ypos -732
+  }
+  Merge2 {
+   inputs 2
+   name Merge43
+   xpos -696
+   ypos -732
+  }
+  Constant {
+   inputs 0
+   channels rgb
+   color {0.0395462 0.0395462 0.0395462 0}
+   format "1920 1080 0 0 1920 1080 1 HD"
+   name Constant42
+   xpos -476
+   ypos -708
+   postage_stamp false
+  }
+  Transform {
+   translate {1838 618}
+   rotate -90
+   scale {0.029 0.076}
+   filter Impulse
+   name Transform47
+   xpos -586
+   ypos -708
+  }
+  Merge2 {
+   inputs 2
+   name Merge44
+   xpos -696
+   ypos -708
+  }
+  Constant {
+   inputs 0
+   channels rgb
+   color {0.0666259 0.0666259 0.0666259 0}
+   format "1920 1080 0 0 1920 1080 1 HD"
+   name Constant43
+   xpos -476
+   ypos -684
+   postage_stamp false
+  }
+  Transform {
+   translate {1838 562}
+   rotate -90
+   scale {0.029 0.076}
+   filter Impulse
+   name Transform48
+   xpos -586
+   ypos -684
+  }
+  Merge2 {
+   inputs 2
+   name Merge45
+   xpos -696
+   ypos -684
+  }
+  Constant {
+   inputs 0
+   channels rgb
+   color {0.104616 0.104616 0.104616 0}
+   format "1920 1080 0 0 1920 1080 1 HD"
+   name Constant44
+   xpos -476
+   ypos -660
+   postage_stamp false
+  }
+  Transform {
+   translate {1838 506}
+   rotate -90
+   scale {0.029 0.076}
+   filter Impulse
+   name Transform49
+   xpos -586
+   ypos -660
+  }
+  Merge2 {
+   inputs 2
+   name Merge46
+   xpos -696
+   ypos -660
+  }
+  Constant {
+   inputs 0
+   channels rgb
+   color {0.152926 0.152926 0.152926 0}
+   format "1920 1080 0 0 1920 1080 1 HD"
+   name Constant45
+   xpos -476
+   ypos -636
+   postage_stamp false
+  }
+  Transform {
+   translate {1838 450}
+   rotate -90
+   scale {0.029 0.076}
+   filter Impulse
+   name Transform50
+   xpos -586
+   ypos -636
+  }
+  Merge2 {
+   inputs 2
+   name Merge47
+   xpos -696
+   ypos -636
+  }
+  Constant {
+   inputs 0
+   channels rgb
+   color {0.205079 0.205079 0.205079 0}
+   format "1920 1080 0 0 1920 1080 1 HD"
+   name Constant46
+   xpos -476
+   ypos -612
+   postage_stamp false
+  }
+  Transform {
+   translate {1838 394}
+   rotate -90
+   scale {0.029 0.076}
+   filter Impulse
+   name Transform51
+   xpos -586
+   ypos -612
+  }
+  Merge2 {
+   inputs 2
+   name Merge48
+   xpos -696
+   ypos -612
+  }
+  Constant {
+   inputs 0
+   channels rgb
+   color {0.287441 0.287441 0.287441 0}
+   format "1920 1080 0 0 1920 1080 1 HD"
+   name Constant47
+   xpos -476
+   ypos -588
+   postage_stamp false
+  }
+  Transform {
+   translate {1838 338}
+   rotate -90
+   scale {0.029 0.076}
+   filter Impulse
+   name Transform52
+   xpos -586
+   ypos -588
+  }
+  Merge2 {
+   inputs 2
+   name Merge49
+   xpos -696
+   ypos -588
+  }
+  Constant {
+   inputs 0
+   channels rgb
+   color {0.386429 0.386429 0.386429 0}
+   format "1920 1080 0 0 1920 1080 1 HD"
+   name Constant48
+   xpos -476
+   ypos -564
+   postage_stamp false
+  }
+  Transform {
+   translate {1838 282}
+   rotate -90
+   scale {0.029 0.076}
+   filter Impulse
+   name Transform53
+   xpos -586
+   ypos -564
+  }
+  Merge2 {
+   inputs 2
+   name Merge50
+   xpos -696
+   ypos -564
+  }
+  Constant {
+   inputs 0
+   channels rgb
+   color {0.502886 0.502886 0.502886 0}
+   format "1920 1080 0 0 1920 1080 1 HD"
+   name Constant49
+   xpos -476
+   ypos -540
+   postage_stamp false
+  }
+  Transform {
+   translate {1838 226}
+   rotate -90
+   scale {0.029 0.076}
+   filter Impulse
+   name Transform54
+   xpos -586
+   ypos -540
+  }
+  Merge2 {
+   inputs 2
+   name Merge51
+   xpos -696
+   ypos -540
+  }
+  Constant {
+   inputs 0
+   channels rgb
+   color {0.64448 0.64448 0.64448 0}
+   format "1920 1080 0 0 1920 1080 1 HD"
+   name Constant50
+   xpos -476
+   ypos -516
+   postage_stamp false
+  }
+  Transform {
+   translate {1838 170}
+   rotate -90
+   scale {0.029 0.076}
+   filter Impulse
+   name Transform55
+   xpos -586
+   ypos -516
+  }
+  Merge2 {
+   inputs 2
+   name Merge52
+   xpos -696
+   ypos -516
+  }
+  Constant {
+   inputs 0
+   channels rgb
+   color {0.806952 0.806952 0.806952 0}
+   format "1920 1080 0 0 1920 1080 1 HD"
+   name Constant51
+   xpos -476
+   ypos -492
+   postage_stamp false
+  }
+  Transform {
+   translate {1838 114}
+   rotate -90
+   scale {0.029 0.076}
+   filter Impulse
+   name Transform56
+   xpos -586
+   ypos -492
+  }
+  Merge2 {
+   inputs 2
+   name Merge53
+   xpos -696
+   ypos -492
+  }
+  Constant {
+   inputs 0
+   channels rgb
+   color {1 1 1 0}
+   format "1920 1080 0 0 1920 1080 1 HD"
+   name Constant52
+   xpos -476
+   ypos -468
+   postage_stamp false
+  }
+  Transform {
+   translate {1838 58}
+   rotate -90
+   scale {0.03 0.076}
+   filter Impulse
+   name Transform57
+   xpos -586
+   ypos -468
+  }
+  Merge2 {
+   inputs 2
+   name Merge54
+   xpos -696
+   ypos -468
+  }
+  Reformat {
+   type scale
+   scale {1 0.9}
+   clamp true
+   black_outside true
+   pbb true
+   name Reformat4
+   xpos -696
+   ypos -435
+  }
+  Constant {
+   inputs 0
+   channels rgb
+   format "1920 1080 0 0 1920 1080 1 HD"
+   name Constant59
+   xpos -516
+   ypos -395
+   postage_stamp false
+  }
+  Merge2 {
+   inputs 2
+   name Merge63
+   xpos -696
+   ypos -395
+  }
+  Text {
+   message "Visual\nLinear"
+   font "\[value native_text.font]"
+   size 28
+   xjustify right
+   yjustify bottom
+   Transform 1
+   translate {1850 908}
+   rotate -90
+   name VisualLinear_text
+   xpos -696
+   ypos -371
+  }
+  Merge2 {
+   inputs 2
+   name Merge55
+   xpos -1256
+   ypos -371
+  }
+  Merge2 {
+   inputs 2
+   name Merge60
+   xpos -1256
+   ypos -343
+  }
+  Merge2 {
+   inputs 2
+   name Merge56
+   xpos -1256
+   ypos -104
+  }
+  Constant {
+   inputs 0
+   channels rgb
+   color {0.219526 0.219526 0.219526 0}
+   format "1920 1080 0 0 1920 1080 1 HD"
+   name Constant53
+   xpos -1105
+   ypos -174
+  }
+  Crop {
+   box {0 0 5 1080}
+   name Crop3
+   xpos -1105
+   ypos -102
+  }
+  Transform {
+   translate {1741 0}
+   center {960 540}
+   filter Impulse
+   name Transform58
+   xpos -1105
+   ypos -58
+  }
+  Constant {
+   inputs 0
+   channels rgb
+   color {0.590619 0.00802319 0.00802319 0}
+   format "1920 1080 0 0 1920 1080 1 HD"
+   name Constant54
+   xpos -936
+   ypos -186
+  }
+set N2c44bee0 [stack 0]
+  Crop {
+   box {0 0 5 1080}
+   name Crop4
+   xpos -990
+   ypos -100
+  }
+  Transform {
+   translate {1677 0}
+   center {960 540}
+   filter Impulse
+   name Transform59
+   xpos -990
+   ypos -58
+  }
+push $N2c44bee0
+  Crop {
+   box {0 0 5 1080}
+   name Crop5
+   xpos -881
+   ypos -97
+  }
+  Transform {
+   translate {238 0}
+   center {960 540}
+   filter Impulse
+   name Transform60
+   xpos -881
+   ypos -52
+  }
+  Merge2 {
+   inputs 2
+   name Merge59
+   xpos -940
+   ypos -10
+  }
+  Merge2 {
+   inputs 2
+   name Merge58
+   xpos -1105
+   ypos -10
+  }
+  Merge2 {
+   inputs 2
+   name Merge57
+   xpos -1256
+   ypos -10
+  }
+set N2c47a540 [stack 0]
+  Output {
+   name Output1
+   xpos -1256
+   ypos 144
+  }
+push $N2c47a540
+  Viewer {
+   input_process false
+   name Viewer1
+   xpos -1256
+   ypos 18
+  }
+ end_group
+ Merge2 {
+  inputs 2
+  name Merge61
+  xpos 469
+  ypos -18
+ }
+ Shuffle {
+  alpha white
+  name Shuffle1
+  xpos 469
+  ypos 6
+ }
+clone $C159dbd90 {
+  xpos 469
+  ypos 308
+  selected false
+ }
+ Colorspace {
+  colorspace_out sRGB
+  name Colorspace1
+  xpos 469
+  ypos 349
+ }
+ Retime {
+  input.first {{root.first_frame i}}
+  input.first_lock true
+  input.last {{root.last_frame i}}
+  input.last_lock true
+  output.first {{Retime1.output.first-1 i}}
+  output.first_lock true
+  output.last {{output.first.main i}}
+  output.last_lock true
+  speed 50
+  before black
+  after black
+  name Retime3
+  xpos 469
+  ypos 373
+ }
+ AppendClip {
+  inputs 2
+  firstFrame {{Retime1.output.first-1 i}}
+  lastFrame 200
+  name AppendClip1
+  xpos 469
+  ypos 475
+ }
+ Merge2 {
+  inputs 2
+  mix {{"\[value LabelToggle_ctrl]==1 && \[value SlateToggle_ctrl]==0" i}}
+  name Merge3
+  xpos 469
+  ypos 523
+ }
+ Merge2 {
+  inputs 2
+  mix {{parent.ShowFramingChart i}}
+  name Merge4
+  label "\[value mix]"
+  xpos 469
+  ypos 568
+  disable true
+ }
+ Reformat {
+  type "to box"
+  box_width 2048
+  box_height 1556
+  box_fixed true
+  filter Rifman
+  name Reformat3
+  xpos 469
+  ypos 630
+ }
+ Output {
+  name Output1
+  xpos 469
+  ypos 720
+ }
+ Constant {
+  inputs 0
+  channels rgb
+  color {0 0 0 0}
+  name Constant1
+  xpos -768
+  ypos -979
+ }
+set N2c4e81b0 [stack 0]
+ Text {
+  message ""
+  font /Library/Fonts/华文楷体.ttf
+  translate {100 100}
+  name native_text_Chinese
+  tile_color 0xff0000ff
+  xpos -607
+  ypos -955
+ }
+ FrameRange {
+  inputs 0
+  first_frame {{root.first_frame i}}
+  last_frame {{root.last_frame i}}
+  name FrameRange2
+  xpos 665
+  ypos 476
+ }
+push $N2c4e81b0
+ Text {
+  message ""
+  font "/Library/Fonts/Arial Black.ttf"
+  translate {100 100}
+  name native_text
+  tile_color 0xff0000ff
+  xpos -768
+  ypos -883
+ }
+end_group
+Pegasus_SLATE {
+ inputs 0
+ name Pegasus_SLATE1
+ note_font Verdana
+ xpos 32
+ ypos -77
+ Font_English "/Library/Fonts/Arial Black.ttf"
+ Font_Chinese /Library/Fonts/华文楷体.ttf
+ SnapShotFile /Volumes/guofu/GuoFu/Ibrix/FCT/099/elem/editorial/reference/SnapShot/fct099_sup_SnapShot_v001.jpg
+ Artist "\$env(USER)"
+ COMP_Version "\[string range \[file rootname \[file tail \[value root.name]]] end-7 end-5]\n"
+ Version n/a
+ FrameHandles 4+4
+ PegasusShotName "\[string range \[file rootname \[file tail \[value root.name]]] 0 8]"
+ ClientShotName --
+ message_7 --
+ message_8 --
+}
+Viewer {
+ frame 100
+ viewerProcess None
+ input_process false
+ name Viewer1
+ selected true
+ xpos 343
+ ypos -125
+}
