@@ -49,17 +49,25 @@ class SceneLocation:
 
 
 def parse_scene_directory(scene_directory: Path) -> SceneLocation:
-    """验证并解析 ``<项目代码>/<三位集号>`` 集（场）目录。"""
+    """验证并解析集（场）目录及其上级路径中的项目代码。
+
+    标准结构为 ``<项目代码>/<三位集号>``；也兼容
+    ``<项目代码>/Production/scenes/<三位集号>`` 等中间含有目录层级的结构。
+    """
     scene_directory = scene_directory.resolve()
     if not scene_directory.is_dir():
         raise ValueError(f"集（场）目录不存在：{scene_directory}")
 
-    project_code = scene_directory.parent.name
     episode = scene_directory.name
-    if not PROJECT_CODE_PATTERN.fullmatch(project_code):
-        raise ValueError(f"项目代码应为三位大写字母，当前为：{project_code}")
     if not EPISODE_PATTERN.fullmatch(episode):
         raise ValueError(f"集号（场号）应为三位数字，当前为：{episode}")
+
+    project_code = next(
+        (parent.name for parent in scene_directory.parents if PROJECT_CODE_PATTERN.fullmatch(parent.name)),
+        None,
+    )
+    if project_code is None:
+        raise ValueError(f"未能在上级目录中找到三位大写字母的项目代码：{scene_directory}")
     return SceneLocation(project_code=project_code, episode=episode, directory=scene_directory)
 
 
