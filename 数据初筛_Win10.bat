@@ -2,124 +2,140 @@
 setlocal EnableExtensions
 chcp 65001 >nul
 
-rem 此文件可直接复制到任意 <项目代码>\<集号(场号)> 目录后双击运行。
+rem Copy this file into a <PROJECT>\<EPISODE> directory and double-click it.
 set "SCENE_DIR=%~dp0"
-set "TEMP_PY=%TEMP%\data_filter_%RANDOM%_%RANDOM%.py"
+if "%SCENE_DIR:~-1%"=="\" set "SCENE_DIR=%SCENE_DIR:~0,-1%"
+set "SELF=%~f0"
+set "TEMP_PY=%TEMP%\data_filter_embedded_%RANDOM%%RANDOM%.py"
 
-powershell -NoProfile -ExecutionPolicy Bypass -Command "$lines = Get-Content -LiteralPath '%~f0'; $marker = [Array]::IndexOf([string[]]$lines, '# ==PYTHON=='); if ($marker -lt 0) { exit 1 }; $lines[($marker + 1)..($lines.Length - 1)] | Set-Content -LiteralPath '%TEMP_PY%' -Encoding UTF8"
+py -3 --version >nul 2>nul
+if not errorlevel 1 (
+    set "PY_CMD=py -3"
+) else (
+    python --version >nul 2>nul
+    if not errorlevel 1 (
+        set "PY_CMD=python"
+    ) else (
+        echo Python 3 was not found. Please install Python 3 and try again.
+        goto :error
+    )
+)
+
+%PY_CMD% -c "import base64,pathlib,sys; data=pathlib.Path(sys.argv[1]).read_text(encoding='utf-8').rsplit('__PYTHON_BASE64_BELOW__',1)[1]; pathlib.Path(sys.argv[2]).write_bytes(base64.b64decode(''.join(data.split())))" "%SELF%" "%TEMP_PY%"
 if errorlevel 1 (
-    echo 无法准备数据初筛程序。
+    echo Failed to prepare the embedded data-filter program.
     goto :error
 )
 
-py -3 "%TEMP_PY%" "%SCENE_DIR%"
-if errorlevel 1 (
-    python "%TEMP_PY%" "%SCENE_DIR%"
-)
-if errorlevel 1 (
-    echo.
-    echo 未找到可用的 Python 3，或数据目录不符合规范。
-    echo 请安装 Python 3 后重试，并确认脚本位于 ^<项目代码^>\^<三位集号(场号)^> 目录。
-    goto :error
-)
+%PY_CMD% "%TEMP_PY%" "%SCENE_DIR%"
+set "RUN_CODE=%errorlevel%"
 
-del "%TEMP_PY%" >nul 2>nul
+if exist "%TEMP_PY%" del "%TEMP_PY%" >nul 2>nul
+if not "%RUN_CODE%"=="0" goto :error
+
 echo.
-echo 数据初筛完成。
+echo Data filtering completed.
 pause
 exit /b 0
 
 :error
-del "%TEMP_PY%" >nul 2>nul
+if exist "%TEMP_PY%" del "%TEMP_PY%" >nul 2>nul
 echo.
 pause
 exit /b 1
 
-# ==PYTHON==
-from __future__ import annotations
-
-import re
-import sys
-from pathlib import Path
-
-
-PROJECT_CODE_PATTERN = re.compile(r"^[A-Z]{3}$")
-EPISODE_PATTERN = re.compile(r"^\d{3}$")
-SHOT_PATTERN = re.compile(r"^\d{3}(?:\d{3})?$")
-VERSION_PATTERN = re.compile(r"(?:^|[_-])v(\d+)(?=$|[_\.\-])", re.IGNORECASE)
-TEMPORARY_SUFFIXES = {".autosave", ".bak", ".tmp", ".swp"}
-
-
-def parse_scene_directory(scene_directory: Path) -> tuple[str, str, Path]:
-    scene_directory = scene_directory.resolve()
-    if not scene_directory.is_dir():
-        raise ValueError(f"集（场）目录不存在：{scene_directory}")
-    project_code = scene_directory.parent.name
-    episode = scene_directory.name
-    if not PROJECT_CODE_PATTERN.fullmatch(project_code):
-        raise ValueError(f"项目代码应为三位大写字母，当前为：{project_code}")
-    if not EPISODE_PATTERN.fullmatch(episode):
-        raise ValueError(f"集号（场号）应为三位数字，当前为：{episode}")
-    return project_code, episode, scene_directory
-
-
-def is_temporary_file(path: Path) -> bool:
-    return (
-        any(path.name.lower().endswith(suffix) for suffix in TEMPORARY_SUFFIXES)
-        or path.name.startswith((".", "~$"))
-    )
-
-
-def version_number(path: Path) -> int | None:
-    matches = VERSION_PATTERN.findall(path.stem)
-    return int(matches[-1]) if matches else None
-
-
-def highest_version_task_file(task_directory: Path) -> Path | None:
-    candidates: list[tuple[int, Path]] = []
-    for path in task_directory.iterdir():
-        if not path.is_file() or is_temporary_file(path):
-            continue
-        version = version_number(path)
-        if version is not None:
-            candidates.append((version, path))
-    if not candidates:
-        return None
-    highest_version = max(version for version, _ in candidates)
-    return min(
-        (path for version, path in candidates if version == highest_version),
-        key=lambda path: path.name.lower(),
-    )
-
-
-def main() -> int:
-    try:
-        project_code, episode, scene_directory = parse_scene_directory(Path(sys.argv[1]))
-    except (IndexError, ValueError) as error:
-        print(f"错误：{error}")
-        return 1
-
-    latest_files: list[Path] = []
-    shot_directories = sorted(
-        (path for path in scene_directory.iterdir() if path.is_dir() and SHOT_PATTERN.fullmatch(path.name)),
-        key=lambda path: (int(path.name), path.name),
-    )
-    for shot_directory in shot_directories:
-        task_directory = shot_directory / "cmp" / "task"
-        if task_directory.is_dir():
-            latest_file = highest_version_task_file(task_directory)
-            if latest_file:
-                latest_files.append(latest_file)
-
-    output_path = scene_directory / f"{project_code}_{episode}_DataFilter.txt"
-    output_path.write_text(
-        "\n".join(path.name for path in latest_files) + ("\n" if latest_files else ""),
-        encoding="utf-8",
-    )
-    print(f"已生成：{output_path}")
-    print(f"共提取 {len(latest_files)} 个镜头的最高版本合成工程文件。")
-    return 0
-
-
-if __name__ == "__main__":
-    sys.exit(main())
+__PYTHON_BASE64_BELOW__
+IiIi5oyJ6ZuG77yI5Zy677yJ55uu5b2V5rGH5oC75ZCE6ZWc5aS05pyA6auY54mI5pys55qE5ZCI
+5oiQ5bel56iL5paH5Lu244CCCgrnm67lvZXnuqblrpo6OgoKICAgIDzpobnnm67ku6PnoIE+Lzzp
+m4blj7fmiJblnLrlj7c+LzzplZzlpLTlj7c+L2NtcC90YXNrLzzlt6XnqIvmlofku7Y+Cgrkvovl
+poLlnKggYGBUTFAvMDAyYGAg55uu5b2V5Lit5omn6KGMIGBgcHl0aG9uIC9wYXRoL3RvL2RhdGFf
+ZmlsdGVyLnB5YGDvvIzkvJrnlJ/miJAKYGBUTFBfMDAyX0RhdGFGaWx0ZXIudHh0YGDjgILkuZ/l
+j6/ku6XmmL7lvI/kvKDlhaXpm4bvvIjlnLrvvInnm67lvZXvvJoKYGBweXRob24gZGF0YV9maWx0
+ZXIucHkgL3Nob3cvVExQLzAwMmBg44CCCiIiIgoKZnJvbSBfX2Z1dHVyZV9fIGltcG9ydCBhbm5v
+dGF0aW9ucwoKaW1wb3J0IGFyZ3BhcnNlCmltcG9ydCByZQppbXBvcnQgc3lzCmZyb20gZGF0YWNs
+YXNzZXMgaW1wb3J0IGRhdGFjbGFzcwpmcm9tIHBhdGhsaWIgaW1wb3J0IFBhdGgKCgpQUk9KRUNU
+X0NPREVfUEFUVEVSTiA9IHJlLmNvbXBpbGUociJeW0EtWl17M30kIikKRVBJU09ERV9QQVRURVJO
+ID0gcmUuY29tcGlsZShyIl5cZHszfSQiKQpTSE9UX1BBVFRFUk4gPSByZS5jb21waWxlKHIiXlxk
+ezN9KD86XGR7M30pPyQiKQpWRVJTSU9OX1BBVFRFUk4gPSByZS5jb21waWxlKHIiKD86XnxbXy1d
+KXYoXGQrKSg/PSR8W19cLlwtXSkiLCByZS5JR05PUkVDQVNFKQpURU1QT1JBUllfU1VGRklYRVMg
+PSB7Ii5hdXRvc2F2ZSIsICIuYmFrIiwgIi50bXAiLCAiLnN3cCJ9CgojIOeUqOS6juWQjue7reaJ
+qeWxleaVsOaNruWIneetm+aXtuWkjeeUqOeahOa1geeoi+S4juaVsOaNruWxnuaAp+mHiuS5ieOA
+ggpQUk9DRVNTX0NPREVfTUVBTklOR1MgPSB7CiAgICAiYW5pIjogIuWKqOeUuyIsCiAgICAiY21w
+IjogIuWQiOaIkCIsCiAgICAiZWRpdG9yaWFsIjogIuWJqui+kSIsCiAgICAiZWR0b3JpYWwiOiAi
+5Ymq6L6R77yIZWRpdG9yaWFsIOeahOW4uOingeaLvOWGmeWPmOS9k++8iSIsCiAgICAicm90b3Bh
+aW50IjogIuaTpumZpCIsCn0KREFUQV9BVFRSSUJVVEVfTUVBTklOR1MgPSB7CiAgICAiaW1nIjog
+Iua4suafk+e7k+aehCIsCiAgICAiaW1hZ2VzIjogIua4suafk+e7k+aehCIsCiAgICAidGFzayI6
+ICLlt6XnqIvmlofku7YiLAp9CgoKQGRhdGFjbGFzcyhmcm96ZW49VHJ1ZSkKY2xhc3MgU2NlbmVM
+b2NhdGlvbjoKICAgICIiIuS7jumbhu+8iOWcuu+8ieebruW9leivhuWIq+WHuueahOmhueebruOA
+gembhu+8iOWcuu+8ieS/oeaBr+OAgiIiIgoKICAgIHByb2plY3RfY29kZTogc3RyCiAgICBlcGlz
+b2RlOiBzdHIKICAgIGRpcmVjdG9yeTogUGF0aAoKCmRlZiBwYXJzZV9zY2VuZV9kaXJlY3Rvcnko
+c2NlbmVfZGlyZWN0b3J5OiBQYXRoKSAtPiBTY2VuZUxvY2F0aW9uOgogICAgIiIi6aqM6K+B5bm2
+6Kej5p6QIGBgPOmhueebruS7o+eggT4vPOS4ieS9jembhuWPtz5gYCDpm4bvvIjlnLrvvInnm67l
+vZXjgIIiIiIKICAgIHNjZW5lX2RpcmVjdG9yeSA9IHNjZW5lX2RpcmVjdG9yeS5yZXNvbHZlKCkK
+ICAgIGlmIG5vdCBzY2VuZV9kaXJlY3RvcnkuaXNfZGlyKCk6CiAgICAgICAgcmFpc2UgVmFsdWVF
+cnJvcihmIumbhu+8iOWcuu+8ieebruW9leS4jeWtmOWcqO+8mntzY2VuZV9kaXJlY3Rvcnl9IikK
+CiAgICBwcm9qZWN0X2NvZGUgPSBzY2VuZV9kaXJlY3RvcnkucGFyZW50Lm5hbWUKICAgIGVwaXNv
+ZGUgPSBzY2VuZV9kaXJlY3RvcnkubmFtZQogICAgaWYgbm90IFBST0pFQ1RfQ09ERV9QQVRURVJO
+LmZ1bGxtYXRjaChwcm9qZWN0X2NvZGUpOgogICAgICAgIHJhaXNlIFZhbHVlRXJyb3IoZiLpobnn
+m67ku6PnoIHlupTkuLrkuInkvY3lpKflhpnlrZfmr43vvIzlvZPliY3kuLrvvJp7cHJvamVjdF9j
+b2RlfSIpCiAgICBpZiBub3QgRVBJU09ERV9QQVRURVJOLmZ1bGxtYXRjaChlcGlzb2RlKToKICAg
+ICAgICByYWlzZSBWYWx1ZUVycm9yKGYi6ZuG5Y+377yI5Zy65Y+377yJ5bqU5Li65LiJ5L2N5pWw
+5a2X77yM5b2T5YmN5Li677yae2VwaXNvZGV9IikKICAgIHJldHVybiBTY2VuZUxvY2F0aW9uKHBy
+b2plY3RfY29kZT1wcm9qZWN0X2NvZGUsIGVwaXNvZGU9ZXBpc29kZSwgZGlyZWN0b3J5PXNjZW5l
+X2RpcmVjdG9yeSkKCgpkZWYgaXNfdGVtcG9yYXJ5X2ZpbGUocGF0aDogUGF0aCkgLT4gYm9vbDoK
+ICAgICIiIuaOkumZpCBOdWtlIGF1dG9zYXZl44CB5aSH5Lu95ZKM57yW6L6R5Zmo5Li05pe25paH
+5Lu244CCIiIiCiAgICByZXR1cm4gKAogICAgICAgIGFueShwYXRoLm5hbWUubG93ZXIoKS5lbmRz
+d2l0aChzdWZmaXgpIGZvciBzdWZmaXggaW4gVEVNUE9SQVJZX1NVRkZJWEVTKQogICAgICAgIG9y
+IHBhdGgubmFtZS5zdGFydHN3aXRoKCgiLiIsICJ+JCIpKQogICAgKQoKCmRlZiB2ZXJzaW9uX251
+bWJlcihwYXRoOiBQYXRoKSAtPiBpbnQgfCBOb25lOgogICAgIiIi5Y+W5b6X5paH5Lu25ZCN5Lit
+55qE54mI5pys5Y+377yM5L6L5aaCIGBgKl92MDAxLm5rYGAg6L+U5ZueIDHjgIIiIiIKICAgIG1h
+dGNoZXMgPSBWRVJTSU9OX1BBVFRFUk4uZmluZGFsbChwYXRoLnN0ZW0pCiAgICByZXR1cm4gaW50
+KG1hdGNoZXNbLTFdKSBpZiBtYXRjaGVzIGVsc2UgTm9uZQoKCmRlZiBzaG90X3NvcnRfa2V5KHBh
+dGg6IFBhdGgpIC0+IHR1cGxlW2ludCwgc3RyXToKICAgIHJldHVybiAoaW50KHBhdGgubmFtZSks
+IHBhdGgubmFtZSkKCgpkZWYgaGlnaGVzdF92ZXJzaW9uX3Rhc2tfZmlsZSh0YXNrX2RpcmVjdG9y
+eTogUGF0aCkgLT4gUGF0aCB8IE5vbmU6CiAgICAiIiLov5Tlm54gdGFzayDnm67lvZXkuK3niYjm
+nKzmnIDpq5jnmoTmraPlvI/lt6XnqIvmlofku7bjgIIKCiAgICDlkIzkuIDmnIDpq5jniYjmnKzm
+nInlpJrkuKrmlofku7bml7bvvIzmjInmlofku7blkI3kuI3ljLrliIblpKflsI/lhpnmjpLluo/v
+vIznqLPlrprlnLDpgInmi6nnrKzkuIDkuKrjgIIKICAgICIiIgogICAgY2FuZGlkYXRlczogbGlz
+dFt0dXBsZVtpbnQsIHN0ciwgUGF0aF1dID0gW10KICAgIGZvciBwYXRoIGluIHRhc2tfZGlyZWN0
+b3J5Lml0ZXJkaXIoKToKICAgICAgICBpZiBub3QgcGF0aC5pc19maWxlKCkgb3IgaXNfdGVtcG9y
+YXJ5X2ZpbGUocGF0aCk6CiAgICAgICAgICAgIGNvbnRpbnVlCiAgICAgICAgdmVyc2lvbiA9IHZl
+cnNpb25fbnVtYmVyKHBhdGgpCiAgICAgICAgaWYgdmVyc2lvbiBpcyBub3QgTm9uZToKICAgICAg
+ICAgICAgY2FuZGlkYXRlcy5hcHBlbmQoKHZlcnNpb24sIHBhdGgubmFtZS5sb3dlcigpLCBwYXRo
+KSkKICAgIGlmIG5vdCBjYW5kaWRhdGVzOgogICAgICAgIHJldHVybiBOb25lCiAgICBoaWdoZXN0
+X3ZlcnNpb24gPSBtYXgoaXRlbVswXSBmb3IgaXRlbSBpbiBjYW5kaWRhdGVzKQogICAgcmV0dXJu
+IG1pbigKICAgICAgICAoaXRlbVsyXSBmb3IgaXRlbSBpbiBjYW5kaWRhdGVzIGlmIGl0ZW1bMF0g
+PT0gaGlnaGVzdF92ZXJzaW9uKSwKICAgICAgICBrZXk9bGFtYmRhIHBhdGg6IHBhdGgubmFtZS5s
+b3dlcigpLAogICAgKQoKCmRlZiBjb2xsZWN0X2xhdGVzdF9jbXBfdGFza3Moc2NlbmVfZGlyZWN0
+b3J5OiBQYXRoKSAtPiBsaXN0W1BhdGhdOgogICAgIiIi5pS26ZuG6K+l6ZuG77yI5Zy677yJ5YWo
+6YOo5pyJ5pWI6ZWc5aS055qE5pyA6auY54mI5pysIGBgY21wL3Rhc2tgYCDlt6XnqIvmlofku7bj
+gIIiIiIKICAgIHNlbGVjdGVkOiBsaXN0W1BhdGhdID0gW10KICAgIHNob3RfZGlyZWN0b3JpZXMg
+PSBzb3J0ZWQoCiAgICAgICAgKHBhdGggZm9yIHBhdGggaW4gc2NlbmVfZGlyZWN0b3J5Lml0ZXJk
+aXIoKSBpZiBwYXRoLmlzX2RpcigpIGFuZCBTSE9UX1BBVFRFUk4uZnVsbG1hdGNoKHBhdGgubmFt
+ZSkpLAogICAgICAgIGtleT1zaG90X3NvcnRfa2V5LAogICAgKQogICAgZm9yIHNob3RfZGlyZWN0
+b3J5IGluIHNob3RfZGlyZWN0b3JpZXM6CiAgICAgICAgdGFza19kaXJlY3RvcnkgPSBzaG90X2Rp
+cmVjdG9yeSAvICJjbXAiIC8gInRhc2siCiAgICAgICAgaWYgbm90IHRhc2tfZGlyZWN0b3J5Lmlz
+X2RpcigpOgogICAgICAgICAgICBjb250aW51ZQogICAgICAgIGxhdGVzdF9maWxlID0gaGlnaGVz
+dF92ZXJzaW9uX3Rhc2tfZmlsZSh0YXNrX2RpcmVjdG9yeSkKICAgICAgICBpZiBsYXRlc3RfZmls
+ZToKICAgICAgICAgICAgc2VsZWN0ZWQuYXBwZW5kKGxhdGVzdF9maWxlKQogICAgcmV0dXJuIHNl
+bGVjdGVkCgoKZGVmIHdyaXRlX2RhdGFfZmlsdGVyX2ZpbGUoc2NlbmVfZGlyZWN0b3J5OiBQYXRo
+KSAtPiBQYXRoOgogICAgIiIi55Sf5oiQIGBgPOmhueebruS7o+eggT5fPOmbhuWPtz5fRGF0YUZp
+bHRlci50eHRgYCDlubbov5Tlm57lhbbot6/lvoTjgIIiIiIKICAgIHNjZW5lID0gcGFyc2Vfc2Nl
+bmVfZGlyZWN0b3J5KHNjZW5lX2RpcmVjdG9yeSkKICAgIG91dHB1dF9wYXRoID0gc2NlbmUuZGly
+ZWN0b3J5IC8gZiJ7c2NlbmUucHJvamVjdF9jb2RlfV97c2NlbmUuZXBpc29kZX1fRGF0YUZpbHRl
+ci50eHQiCiAgICBmaWxlbmFtZXMgPSBbcGF0aC5uYW1lIGZvciBwYXRoIGluIGNvbGxlY3RfbGF0
+ZXN0X2NtcF90YXNrcyhzY2VuZS5kaXJlY3RvcnkpXQogICAgb3V0cHV0X3BhdGgud3JpdGVfdGV4
+dCgiXG4iLmpvaW4oZmlsZW5hbWVzKSArICgiXG4iIGlmIGZpbGVuYW1lcyBlbHNlICIiKSwgZW5j
+b2Rpbmc9InV0Zi04IikKICAgIHJldHVybiBvdXRwdXRfcGF0aAoKCmRlZiBtYWluKGFyZ3Y6IGxp
+c3Rbc3RyXSB8IE5vbmUgPSBOb25lKSAtPiBpbnQ6CiAgICBwYXJzZXIgPSBhcmdwYXJzZS5Bcmd1
+bWVudFBhcnNlcigKICAgICAgICBkZXNjcmlwdGlvbj0i5o+Q5Y+W5b2T5YmN6ZuG77yI5Zy677yJ
+5omA5pyJ6ZWc5aS0IGNtcC90YXNrIOS4reeJiOacrOacgOmrmOeahOW3peeoi+aWh+S7tuWQjeOA
+giIKICAgICkKICAgIHBhcnNlci5hZGRfYXJndW1lbnQoCiAgICAgICAgInNjZW5lX2RpcmVjdG9y
+eSIsCiAgICAgICAgbmFyZ3M9Ij8iLAogICAgICAgIHR5cGU9UGF0aCwKICAgICAgICBkZWZhdWx0
+PVBhdGguY3dkKCksCiAgICAgICAgaGVscD0i6ZuG77yI5Zy677yJ55uu5b2V77yb55yB55Wl5pe2
+5L2/55So5b2T5YmN55uu5b2V44CCIiwKICAgICkKICAgIGFyZ3MgPSBwYXJzZXIucGFyc2VfYXJn
+cyhhcmd2KQogICAgdHJ5OgogICAgICAgIG91dHB1dF9wYXRoID0gd3JpdGVfZGF0YV9maWx0ZXJf
+ZmlsZShhcmdzLnNjZW5lX2RpcmVjdG9yeSkKICAgIGV4Y2VwdCBWYWx1ZUVycm9yIGFzIGVycm9y
+OgogICAgICAgIHBhcnNlci5lcnJvcihzdHIoZXJyb3IpKQoKICAgIHByaW50KGYi5bey55Sf5oiQ
+77yae291dHB1dF9wYXRofSIpCiAgICByZXR1cm4gMAoKCmlmIF9fbmFtZV9fID09ICJfX21haW5f
+XyI6CiAgICBzeXMuZXhpdChtYWluKCkpCg==
