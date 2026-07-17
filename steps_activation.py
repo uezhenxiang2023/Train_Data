@@ -69,7 +69,12 @@ ASSET_STYLE_NAMES = {
         "fog": "雾效",
         "rain": "雨效",
         "fire": "火效",
-        "dust": "尘效"
+        "dust": "尘效",
+        "cloud": "云效",
+        "smoke": "烟效",
+        "particle": "粒子",
+        "blood": "血效",
+        "flare": "光晕",
     },
     "lgt": {
         "character": "角色",
