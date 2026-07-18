@@ -3,31 +3,25 @@ setlocal
 
 if not "%~1"=="" goto use_argument
 
-echo Enter the full path for the new Hiero project file.
-set /p "OUTPUT_PATH=Destination (.hrox): "
-if "%OUTPUT_PATH%"=="" goto cancelled
+echo Enter the directory for the new Hiero project file.
+set /p "OUTPUT_DIRECTORY=Destination directory: "
+if "%OUTPUT_DIRECTORY%"=="" goto cancelled
 goto validate
 
 :use_argument
-set "OUTPUT_PATH=%~1"
+set "OUTPUT_DIRECTORY=%~1"
 
 :validate
-for %%I in ("%OUTPUT_PATH%") do (
-    set "OUTPUT_PATH=%%~fI"
-    set "OUTPUT_EXTENSION=%%~xI"
-)
-
-if /I not "%OUTPUT_EXTENSION%"==".hrox" (
-    echo ERROR: The destination must have a .hrox extension.
-    goto failed
-)
+set "SCRIPT_DIR=%~dp0"
+for %%I in ("%SCRIPT_DIR%.") do set "PROJECT_NAME=%%~nxI"
+for %%I in ("%OUTPUT_DIRECTORY%") do set "OUTPUT_DIRECTORY=%%~fI"
+set "OUTPUT_PATH=%OUTPUT_DIRECTORY%\%PROJECT_NAME%.hrox"
 
 if exist "%OUTPUT_PATH%" (
     echo ERROR: Refusing to overwrite existing project: "%OUTPUT_PATH%"
     goto failed
 )
 
-set "SCRIPT_DIR=%~dp0"
 set "NUKE_PATH=%SCRIPT_DIR%hiero_launcher;%NUKE_PATH%"
 set "HIERO_PROJECT_SAVE_PATH=%OUTPUT_PATH%"
 
@@ -35,7 +29,7 @@ set "HIERO_PROJECT_SAVE_PATH=%OUTPUT_PATH%"
 exit /b %ERRORLEVEL%
 
 :cancelled
-echo Cancelled: no destination was provided.
+echo Cancelled: no destination directory was provided.
 exit /b 2
 
 :failed
