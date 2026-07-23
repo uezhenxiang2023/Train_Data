@@ -18,6 +18,9 @@ set "OUTPUT_DIRECTORY=%~1"
 :prepare
 set "OUTPUT_DIRECTORY=%OUTPUT_DIRECTORY:"=%"
 for %%I in ("%OUTPUT_DIRECTORY%") do set "OUTPUT_DIRECTORY=%%~fI"
+call :find_nuke
+if errorlevel 1 goto nuke_missing
+
 set "PAYLOAD_ROOT=%TEMP%\hiero_scene_builder_%RANDOM%%RANDOM%"
 mkdir "%PAYLOAD_ROOT%\hiero_launcher\Python\Startup" >nul 2>nul
 if errorlevel 1 goto failed
@@ -35,10 +38,24 @@ set "HIERO_OUTPUT_DIRECTORY=%OUTPUT_DIRECTORY%"
 set "HIERO_BUILDER_LOG=%OUTPUT_DIRECTORY%\HieroBuilder.log"
 
 echo Starting Nuke Studio for scene: "%SCENE_DIRECTORY%"
-"D:\Program Files\Nuke16.0v4\Nuke16.0.exe" --studio
+echo Nuke executable: "%NUKE_EXE%"
+"%NUKE_EXE%" --studio
 set "RUN_CODE=%ERRORLEVEL%"
 if exist "%PAYLOAD_ROOT%" rmdir /s /q "%PAYLOAD_ROOT%"
 exit /b %RUN_CODE%
+
+:find_nuke
+if defined NUKE_EXE if exist "%NUKE_EXE%" exit /b 0
+set "NUKE_EXE="
+if exist "C:\Program Files\Nuke16.0v4\Nuke16.0.exe" set "NUKE_EXE=C:\Program Files\Nuke16.0v4\Nuke16.0.exe"
+if defined NUKE_EXE exit /b 0
+if exist "D:\Program Files\Nuke16.0v4\Nuke16.0.exe" set "NUKE_EXE=D:\Program Files\Nuke16.0v4\Nuke16.0.exe"
+if defined NUKE_EXE exit /b 0
+for %%I in ("C:\Program Files\Nuke*\Nuke*.exe" "D:\Program Files\Nuke*\Nuke*.exe") do (
+    if not defined NUKE_EXE if exist "%%~fI" set "NUKE_EXE=%%~fI"
+)
+if defined NUKE_EXE exit /b 0
+exit /b 1
 
 :decode
 set "PAYLOAD_NAME=%~1"
@@ -54,6 +71,15 @@ exit /b 2
 :failed
 if defined PAYLOAD_ROOT if exist "%PAYLOAD_ROOT%" rmdir /s /q "%PAYLOAD_ROOT%"
 echo ERROR: Failed to prepare the embedded Hiero project builder.
+pause
+exit /b 1
+
+:nuke_missing
+echo ERROR: Nuke16.0.exe was not found.
+echo Checked common locations:
+echo   C:\Program Files\Nuke16.0v4\Nuke16.0.exe
+echo   D:\Program Files\Nuke16.0v4\Nuke16.0.exe
+echo You can also set NUKE_EXE to the full Nuke16.0.exe path before running this script.
 pause
 exit /b 1
 
