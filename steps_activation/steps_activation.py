@@ -80,6 +80,7 @@ ASSET_STYLE_NAMES = {
         "character": "角色",
         "prop": "道具",
         "set": "陈设",
+        "env": "环境"
     },
     "dmt": {
         "env": "自然环境",
@@ -200,6 +201,16 @@ def strip_id_prefix(name: str) -> str:
     return re.sub(r"^[FA]\d{3}_", "", name, flags=re.I)
 
 
+def normalized_output_suffix(path: Path) -> str:
+    return ".mp4" if path.suffix.lower() == ".mov" else path.suffix
+
+
+def prefixed_output_name(prefix: str, path: Path) -> str:
+    stripped = strip_id_prefix(path.name)
+    stripped_path = Path(stripped)
+    return f"{prefix}_{stripped_path.stem}{normalized_output_suffix(path)}"
+
+
 def is_excel_output(path: Path, shot_id: str) -> bool:
     return path.name == f"{shot_id}_数据说明.xlsx"
 
@@ -222,13 +233,13 @@ def build_rename_plans(group_dir: Path) -> list[RenamePlan]:
     plans: list[RenamePlan] = []
 
     for index, path in enumerate(list_process_paths(group_dir), start=1):
-        target_name = f"F{index:03d}_{strip_id_prefix(path.name)}"
+        target_name = prefixed_output_name(f"F{index:03d}", path)
         target = path.with_name(target_name)
         if path.name != target_name:
             plans.append(RenamePlan(path, target))
 
     for index, path in enumerate(list_asset_paths(group_dir), start=1):
-        target_name = f"A{index:03d}_{strip_id_prefix(path.name)}"
+        target_name = prefixed_output_name(f"A{index:03d}", path)
         target = path.with_name(target_name)
         if path.name != target_name:
             plans.append(RenamePlan(path, target))
