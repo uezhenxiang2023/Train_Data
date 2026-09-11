@@ -98,6 +98,7 @@ class ShotFile:
     path: Path
     stage_code: str
     version: str
+    descriptors: tuple[str, ...]
     is_final: bool
 
 
@@ -162,8 +163,30 @@ def stage_descriptors(path: Path, shot_id: str, stage_code: str) -> list[str]:
     return []
 
 
+def stage_descriptor_key(path: Path, shot_id: str, stage_code: str) -> tuple[str, ...]:
+    return tuple(stage_descriptors(path, shot_id, stage_code))
+
+
 def is_reposition_cmp(path: Path, shot_id: str, stage_code: str) -> bool:
     return stage_code == "cmp" and "reposition" in stage_descriptors(path, shot_id, stage_code)
+
+
+def asset_descriptor_key(path: Path) -> tuple[str, ...]:
+    stem = strip_id_prefix(path.stem)
+    parts = [part.lower() for part in stem.split("_")]
+
+    for index, part in enumerate(parts):
+        if part not in STAGE_NAMES:
+            continue
+
+        descriptors = []
+        for descriptor in parts[index + 1 :]:
+            if re.fullmatch(r"v\d+", descriptor, re.I):
+                break
+            descriptors.append(descriptor)
+        return tuple(descriptors)
+
+    return ()
 
 
 def parse_asset_stage_and_style(path: Path) -> tuple[str, str]:
@@ -331,27 +354,32 @@ def collect_shot_files(group_dir: Path, shot_id: str) -> list[ShotFile]:
     shot_paths = list_process_paths(group_dir)
     parsed = [(path, *parse_stage_and_version(path, shot_id)) for path in shot_paths]
     parsed = sorted(parsed, key=stage_sort_key)
-    cmp_versions = [
-        version_number(version)
-        for path, stage, version in parsed
-        if stage == "cmp" and not is_reposition_cmp(path, shot_id, stage)
-    ]
-    final_cmp_version = max(cmp_versions) if cmp_versions else None
+    final_cmp_path = max(
+        (
+            (path, version)
+            for path, stage, version in parsed
+            if (
+                stage == "cmp"
+                and not is_reposition_cmp(path, shot_id, stage)
+                and not stage_descriptor_key(path, shot_id, stage)
+            )
+        ),
+        key=lambda item: (version_number(item[1]), natural_key(item[0])),
+        default=None,
+    )
 
     shot_files = []
     for index, (path, stage_code, version) in enumerate(parsed, start=1):
         id_match = re.match(r"^(F\d{3})_", path.name, flags=re.I)
-        is_final = (
-            stage_code == "cmp"
-            and not is_reposition_cmp(path, shot_id, stage_code)
-            and version_number(version) == final_cmp_version
-        )
+        descriptors = stage_descriptor_key(path, shot_id, stage_code)
+        is_final = final_cmp_path is not None and path == final_cmp_path[0]
         shot_files.append(
             ShotFile(
                 file_id=id_match.group(1).upper() if id_match else f"F{index:03d}",
                 path=path,
                 stage_code=stage_code,
                 version=version,
+                descriptors=descriptors,
                 is_final=is_final,
             )
         )
@@ -405,33 +433,60 @@ def build_sheet2_rows(group_dir: Path, asset_files: Iterable[AssetFile], root: P
     return rows
 
 
+def build_cmp_ref_asset_ids(shot_files: list[ShotFile], asset_files: list[AssetFile]) -> dict[str, str]:
+    assets_by_descriptor: dict[tuple[str, ...], list[AssetFile]] = {}
+    for asset_file in asset_files:
+        descriptor = asset_descriptor_key(asset_file.path)
+        if descriptor:
+            assets_by_descriptor.setdefault(descriptor, []).append(asset_file)
+
+    refs: dict[str, list[AssetFile]] = {}
+    consumed_asset_ids: set[str] = set()
+    for shot_file in shot_files:
+        if shot_file.stage_code != "cmp" or not shot_file.descriptors:
+            continue
+        if shot_file.descriptors == ("fg",):
+            refs[shot_file.file_id] = []
+            continue
+
+        matched_assets = assets_by_descriptor.get(shot_file.descriptors, [])
+        refs[shot_file.file_id] = matched_assets
+        consumed_asset_ids.update(asset_file.asset_id for asset_file in matched_assets)
+
+    remaining_assets = [
+        asset_file
+        for asset_file in asset_files
+        if asset_file.asset_id not in consumed_asset_ids
+    ]
+    for shot_file in shot_files:
+        if shot_file.stage_code == "cmp" and not shot_file.descriptors:
+            refs[shot_file.file_id] = remaining_assets
+
+    return {
+        file_id: ",".join(asset_file.asset_id for asset_file in matched_assets)
+        for file_id, matched_assets in refs.items()
+    }
+
+
 def build_sheet3_rows(shot_files: list[ShotFile], asset_files: list[AssetFile]) -> list[dict]:
     rows = []
     previous_output_id = ""
-    asset_ids = ",".join(asset_file.asset_id for asset_file in asset_files)
-    stage_context: dict[str, tuple[str, str]] = {}
-    next_step_number = 1
+    cmp_asset_ids = build_cmp_ref_asset_ids(shot_files, asset_files)
 
     for index, shot_file in enumerate(shot_files, start=1):
         stage_name = STAGE_NAMES.get(shot_file.stage_code, shot_file.stage_code)
+        step_id = f"{index:03d}"
         if index == 1:
-            step_id = f"{next_step_number:03d}"
             input_file_id = ""
             ref_asset_ids = ""
             modification = "作为本组镜头的原始输入素材。"
-            stage_context[shot_file.stage_code] = (step_id, input_file_id)
-            next_step_number += 1
         else:
-            if shot_file.stage_code in stage_context:
-                step_id, input_file_id = stage_context[shot_file.stage_code]
+            input_file_id = previous_output_id
+            ref_asset_ids = cmp_asset_ids.get(shot_file.file_id, "") if shot_file.stage_code == "cmp" else ""
+            if shot_file.stage_code == "cmp" and shot_file.descriptors == ("fg",):
+                modification = "删除F001中的背景元素，提供前景抠像图"
             else:
-                step_id = f"{next_step_number:03d}"
-                input_file_id = previous_output_id
-                stage_context[shot_file.stage_code] = (step_id, input_file_id)
-                next_step_number += 1
-
-            ref_asset_ids = asset_ids if shot_file.stage_code == "cmp" else ""
-            modification = f"基于 {input_file_id} 进行{stage_name}处理，输出 {shot_file.file_id}。"
+                modification = f"基于 {input_file_id} 进行{stage_name}处理，输出 {shot_file.file_id}。"
             if ref_asset_ids:
                 modification = f"引用素材：{ref_asset_ids}。" + modification
             if shot_file.is_final:
