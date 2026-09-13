@@ -66,7 +66,13 @@ def import_review_media(project, media_paths: list[Path]) -> list[Path]:
     clips_bin = project.clipsBin()
     for media_path in media_paths:
         report("Importing: {}".format(media_path))
-        clips_bin.createClip(media_path.as_posix())
+        try:
+            clip = clips_bin.createClip(media_path.as_posix())
+        except Exception as error:
+            report("Import failed: {} ({})".format(media_path, error))
+            raise
+        clip_name = clip.name() if hasattr(clip, "name") else str(clip)
+        report("Imported: {}".format(clip_name))
         imported.append(media_path)
     return imported
 

@@ -7,14 +7,17 @@ from dataclasses import dataclass
 from pathlib import Path
 
 
-PROJECT_CODE_PATTERN = re.compile(r"^[A-Z]{3}$")
-EPISODE_PATTERN = re.compile(r"^\d{3}$")
-SHOT_PATTERN = re.compile(r"^\d{3}(?:\d{3})?$")
+PROJECT_CODE_PATTERN = re.compile(r"^[A-Z][A-Z0-9_]{1,31}$")
+EPISODE_PATTERN = re.compile(r"^\d{1,3}$")
+SHOT_PATTERN = re.compile(r"^(?:\d{3}(?:\d{3})?|C\d{2,3})$", re.IGNORECASE)
 VERSION_PATTERN = re.compile(r"(?:^|[_-])v(\d+)(?=$|[_\.\-])", re.IGNORECASE)
+FRAME_PATTERN = re.compile(r"^(.*?)(\d+)$")
 TEMPORARY_SUFFIXES = {".autosave", ".bak", ".tmp", ".swp"}
+IMAGE_SEQUENCE_EXTENSIONS = {".dpx", ".exr", ".jpg", ".jpeg", ".png", ".tif", ".tiff"}
 MEDIA_DIRECTORIES = (
     ("cmp", "img"),
     ("cmp", "images"),
+    ("cmp", "preview"),
     ("editorial", "plate"),
     ("edtorial", "plate"),
     ("rotopaint", "preview"),
@@ -34,7 +37,12 @@ def parse_scene_directory(scene_directory: Path) -> SceneLocation:
     if not scene_directory.is_dir():
         raise ValueError("Scene directory does not exist: {}".format(scene_directory))
     if not EPISODE_PATTERN.fullmatch(scene_directory.name):
-        raise ValueError("Scene directory must have a three-digit name: {}".format(scene_directory))
+        raise ValueError(
+            "Scene directory must have a one- to three-digit name: {}".format(
+                scene_directory
+            )
+        )
+    episode = scene_directory.name.zfill(3)
 
     project_code = next(
         (
@@ -45,8 +53,10 @@ def parse_scene_directory(scene_directory: Path) -> SceneLocation:
         None,
     )
     if project_code is None:
-        raise ValueError("No three-letter project code found above: {}".format(scene_directory))
-    return SceneLocation(project_code, scene_directory.name, scene_directory)
+        raise ValueError(
+            "No uppercase project code found above: {}".format(scene_directory)
+        )
+    return SceneLocation(project_code, episode, scene_directory)
 
 
 def is_temporary_file(path: Path) -> bool:
@@ -78,6 +88,52 @@ def latest_file(directory: Path, extension: str) -> Path | None:
     return min(candidates, key=lambda path: (-version_number(path), path.name.lower()))
 
 
+def image_sequence_key(path: Path) -> tuple[str, str, int]:
+    match = FRAME_PATTERN.match(path.stem)
+    if match is None:
+        return (path.stem.lower(), path.suffix.lower(), 0)
+    prefix, frame = match.groups()
+    return (prefix.lower(), path.suffix.lower(), len(frame))
+
+
+def image_sequence_sort_key(path: Path) -> tuple[int, str]:
+    match = FRAME_PATTERN.match(path.stem)
+    frame = int(match.group(2)) if match else -1
+    return (frame, path.name.lower())
+
+
+def image_sequence_heads(directory: Path) -> list[Path]:
+    """Return the first existing frame for each image sequence in a directory."""
+    if not directory.is_dir():
+        return []
+    sequences: dict[tuple[str, str, int], list[Path]] = {}
+    for path in directory.iterdir():
+        if (
+            path.is_file()
+            and path.suffix.lower() in IMAGE_SEQUENCE_EXTENSIONS
+            and FRAME_PATTERN.match(path.stem)
+            and not is_temporary_file(path)
+        ):
+            sequences.setdefault(image_sequence_key(path), []).append(path)
+    return [
+        min(paths, key=image_sequence_sort_key)
+        for _, paths in sorted(sequences.items(), key=lambda item: item[0])
+    ]
+
+
+def editorial_plate_sequence_heads(plate_directory: Path) -> list[Path]:
+    """Return sequence head frames from first-level folders under a plate folder."""
+    if not plate_directory.is_dir():
+        return []
+    heads: list[Path] = []
+    for child in sorted(
+        (path for path in plate_directory.iterdir() if path.is_dir()),
+        key=lambda path: path.name.lower(),
+    ):
+        heads.extend(image_sequence_heads(child))
+    return heads
+
+
 def shot_directories(scene_directory: Path) -> list[Path]:
     return sorted(
         (
@@ -85,8 +141,14 @@ def shot_directories(scene_directory: Path) -> list[Path]:
             for path in scene_directory.iterdir()
             if path.is_dir() and SHOT_PATTERN.fullmatch(path.name)
         ),
-        key=lambda path: (int(path.name), path.name),
+        key=shot_sort_key,
     )
+
+
+def shot_sort_key(path: Path) -> tuple[int, int, str]:
+    if path.name.isdigit():
+        return (0, int(path.name), path.name)
+    return (1, int(path.name[1:]), path.name.lower())
 
 
 def collect_latest_cmp_tasks(scene_directory: Path) -> list[Path]:
@@ -129,16 +191,28 @@ def project_stem(task_file: Path) -> str | None:
 
 
 def latest_review_media(task_file: Path) -> list[Path]:
-    """Return one highest-version .mov from each configured review-media folder."""
+    """Return selected review media from each configured folder."""
     shot_directory = task_file.parents[2]
     media: list[Path] = []
     seen_categories: set[str] = set()
     for process, attribute in MEDIA_DIRECTORIES:
-        category = "editorial" if process in {"editorial", "edtorial"} else process
+        if process in {"editorial", "edtorial"}:
+            category = "editorial"
+        elif process == "cmp" and attribute in {"img", "images"}:
+            category = "cmp/images"
+        else:
+            category = "{}/{}".format(process, attribute)
         if category in seen_categories:
             continue
+        found: list[Path] = []
         candidate = latest_file(shot_directory / process / attribute, ".mov")
         if candidate is not None:
-            media.append(candidate)
+            found.append(candidate)
+        if process in {"editorial", "edtorial"} and attribute == "plate":
+            found.extend(
+                editorial_plate_sequence_heads(shot_directory / process / attribute)
+            )
+        if found:
+            media.extend(found)
             seen_categories.add(category)
     return media

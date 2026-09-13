@@ -18,8 +18,8 @@ from dataclasses import dataclass
 from pathlib import Path
 
 
-PROJECT_CODE_PATTERN = re.compile(r"^[A-Z]{3}$")
-EPISODE_PATTERN = re.compile(r"^\d{3}$")
+PROJECT_CODE_PATTERN = re.compile(r"^[A-Z][A-Z0-9_]{1,31}$")
+EPISODE_PATTERN = re.compile(r"^\d{1,3}$")
 SHOT_PATTERN = re.compile(r"^\d{3}(?:\d{3})?$")
 VERSION_PATTERN = re.compile(r"(?:^|[_-])v(\d+)(?=$|[_\.\-])", re.IGNORECASE)
 TEMPORARY_SUFFIXES = {".autosave", ".bak", ".tmp", ".swp"}
@@ -60,14 +60,15 @@ def parse_scene_directory(scene_directory: Path) -> SceneLocation:
 
     episode = scene_directory.name
     if not EPISODE_PATTERN.fullmatch(episode):
-        raise ValueError(f"集号（场号）应为三位数字，当前为：{episode}")
+        raise ValueError(f"集号（场号）应为一到三位数字，当前为：{episode}")
+    episode = episode.zfill(3)
 
     project_code = next(
         (parent.name for parent in scene_directory.parents if PROJECT_CODE_PATTERN.fullmatch(parent.name)),
         None,
     )
     if project_code is None:
-        raise ValueError(f"未能在上级目录中找到三位大写字母的项目代码：{scene_directory}")
+        raise ValueError(f"未能在上级目录中找到大写项目代码：{scene_directory}")
     return SceneLocation(project_code=project_code, episode=episode, directory=scene_directory)
 
 
