@@ -6,5 +6,15 @@ __pycache__/
 *.xlsx
 *.txt
 *.hrox
+*.dpx
+*.exr
+*.nk
+*.nk~
+*.abc
+*.ma
+*.mb
+*.autosave
+*.tif
+*.psd
 /影视视效后期工作室-交付标准说明 副本.pdf
 HieroPythonDevGuide-Nuke16.0v1/
