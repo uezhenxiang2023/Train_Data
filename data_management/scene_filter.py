@@ -8,13 +8,14 @@ from pathlib import Path
 
 
 PROJECT_CODE_PATTERN = re.compile(r"^[A-Z][A-Z0-9_]{1,31}$")
-EPISODE_PATTERN = re.compile(r"^\d{1,3}$")
+EPISODE_PATTERN = re.compile(r"^(?:\d{1,3}|[A-Z]\d{1,3})$", re.IGNORECASE)
 SHOT_PATTERN = re.compile(r"^(?:\d{3}(?:\d{3})?|C\d{2,3})$", re.IGNORECASE)
 VERSION_PATTERN = re.compile(r"(?:^|[_-])v(\d+)(?=$|[_\.\-])", re.IGNORECASE)
 FRAME_PATTERN = re.compile(r"^(.*?)(\d+)$")
 TEMPORARY_SUFFIXES = {".autosave", ".bak", ".tmp", ".swp"}
 IMAGE_SEQUENCE_EXTENSIONS = {".dpx", ".exr", ".jpg", ".jpeg", ".png", ".tif", ".tiff"}
 MEDIA_DIRECTORIES = (
+    ("", "plate"),
     ("cmp", "img"),
     ("cmp", "images"),
     ("cmp", "preview"),
@@ -38,11 +39,11 @@ def parse_scene_directory(scene_directory: Path) -> SceneLocation:
         raise ValueError("Scene directory does not exist: {}".format(scene_directory))
     if not EPISODE_PATTERN.fullmatch(scene_directory.name):
         raise ValueError(
-            "Scene directory must have a one- to three-digit name: {}".format(
+            "Scene directory must have a one- to three-digit name or letter-prefixed code: {}".format(
                 scene_directory
             )
         )
-    episode = scene_directory.name.zfill(3)
+    episode = normalized_episode(scene_directory.name)
 
     project_code = next(
         (
@@ -57,6 +58,12 @@ def parse_scene_directory(scene_directory: Path) -> SceneLocation:
             "No uppercase project code found above: {}".format(scene_directory)
         )
     return SceneLocation(project_code, episode, scene_directory)
+
+
+def normalized_episode(name: str) -> str:
+    if name.isdigit():
+        return name.zfill(3)
+    return "{}{}".format(name[0].upper(), name[1:].zfill(3))
 
 
 def is_temporary_file(path: Path) -> bool:
@@ -200,18 +207,23 @@ def latest_review_media(task_file: Path) -> list[Path]:
             category = "editorial"
         elif process == "cmp" and attribute in {"img", "images"}:
             category = "cmp/images"
+        elif process == "":
+            category = attribute
         else:
             category = "{}/{}".format(process, attribute)
         if category in seen_categories:
             continue
         found: list[Path] = []
-        candidate = latest_file(shot_directory / process / attribute, ".mov")
+        media_directory = (
+            shot_directory / attribute
+            if not process
+            else shot_directory / process / attribute
+        )
+        candidate = latest_file(media_directory, ".mov")
         if candidate is not None:
             found.append(candidate)
-        if process in {"editorial", "edtorial"} and attribute == "plate":
-            found.extend(
-                editorial_plate_sequence_heads(shot_directory / process / attribute)
-            )
+        if attribute == "plate":
+            found.extend(editorial_plate_sequence_heads(media_directory))
         if found:
             media.extend(found)
             seen_categories.add(category)
