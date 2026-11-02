@@ -8,8 +8,8 @@ from pathlib import Path
 
 
 PROJECT_CODE_PATTERN = re.compile(r"^[A-Z][A-Z0-9_]{1,31}$")
-EPISODE_PATTERN = re.compile(r"^(?:\d{1,3}|[A-Z]\d{1,3})$", re.IGNORECASE)
-SHOT_PATTERN = re.compile(r"^(?:\d{3}(?:\d{3})?|C\d{2,3})$", re.IGNORECASE)
+EPISODE_PATTERN = re.compile(r"^(?:\d{1,3}|[A-Z]+|[A-Z]\d{1,3})$", re.IGNORECASE)
+SHOT_PATTERN = re.compile(r"^(?:\d{3,4}|\d{6}|C\d{2,3})$", re.IGNORECASE)
 VERSION_PATTERN = re.compile(r"(?:^|[_-])v(\d+)(?=$|[_\.\-])", re.IGNORECASE)
 FRAME_PATTERN = re.compile(r"^(.*?)(\d+)$")
 TEMPORARY_SUFFIXES = {".autosave", ".bak", ".tmp", ".swp"}
@@ -39,7 +39,7 @@ def parse_scene_directory(scene_directory: Path) -> SceneLocation:
         raise ValueError("Scene directory does not exist: {}".format(scene_directory))
     if not EPISODE_PATTERN.fullmatch(scene_directory.name):
         raise ValueError(
-            "Scene directory must have a one- to three-digit name or letter-prefixed code: {}".format(
+                "Scene directory must have a one- to three-digit name, letter code, or letter-prefixed code: {}".format(
                 scene_directory
             )
         )
@@ -63,6 +63,8 @@ def parse_scene_directory(scene_directory: Path) -> SceneLocation:
 def normalized_episode(name: str) -> str:
     if name.isdigit():
         return name.zfill(3)
+    if name.isalpha():
+        return name.upper()
     return "{}{}".format(name[0].upper(), name[1:].zfill(3))
 
 
