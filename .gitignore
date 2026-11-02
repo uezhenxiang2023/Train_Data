@@ -10,6 +10,7 @@ __pycache__/
 *.exr
 *.nk
 *.nk~
+*.comp
 *.abc
 *.ma
 *.mb
@@ -19,3 +20,5 @@ __pycache__/
 *.fbx
 /影视视效后期工作室-交付标准说明 副本.pdf
 HieroPythonDevGuide-Nuke16.0v1/
+data_filter/ZLJ/Production/HS/HS/0010/cmp/task/elem/.DS_Store
+data_filter/ZLJ/Production/HS/HS/0010/cmp/task/elem/._.DS_Store
